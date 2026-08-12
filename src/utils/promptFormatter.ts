@@ -56,8 +56,8 @@ export function formatExplainAndFixPrompt(
     codeSuffix = ` [${codeValue}]`;
   }
 
-  // Format: "Explain what this problem is and help me fix it: {message} @{path}#L{line}"
-  return `Explain what this problem is and help me fix it: ${diagnostic.message}${codeSuffix} @${relativePath}#L${lineNumber}`;
+  // Format: "Explain what this problem is and help me fix it: {message} @{path}#{line}"
+  return `Explain what this problem is and help me fix it: ${diagnostic.message}${codeSuffix} @${relativePath}#${lineNumber}`;
 }
 
 /**

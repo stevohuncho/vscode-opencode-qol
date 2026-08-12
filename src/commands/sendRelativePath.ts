@@ -1,4 +1,5 @@
 import { ConnectionService } from '../connection/connectionService';
+import { FileReferenceInput } from '../types';
 import { formatRelativePath, isDirectory } from '../utils/pathUtils';
 
 import * as vscode from 'vscode';
@@ -14,14 +15,17 @@ function showTransientNotification(message: string): void {
 /**
  * Format relative paths for sending to OpenCode
  * @param resources - Array of VS Code URIs
- * @returns Formatted path string with @ prefix and trailing slashes for directories
+ * @returns Structured file references with relative display paths
  */
-function formatRelativePaths(resources: vscode.Uri[]): string {
-  const paths = resources.map(uri => {
+function formatRelativeReferences(resources: vscode.Uri[]): FileReferenceInput[] {
+  return resources.map(uri => {
     const relativePath = vscode.workspace.asRelativePath(uri, false);
-    return formatRelativePath(relativePath, isDirectory(uri.fsPath));
+    return {
+      filePath: uri.fsPath,
+      displayPath: formatRelativePath(relativePath, isDirectory(uri.fsPath)).slice(1),
+      mimeType: isDirectory(uri.fsPath) ? 'application/x-directory' : 'text/plain',
+    };
   });
-  return paths.join('\n');
 }
 
 export async function handleSendRelativePath(
@@ -54,17 +58,17 @@ export async function handleSendRelativePath(
     const port = openCodeClient.getPort();
     const workspaceDir =
       workspacePath ?? vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? 'unknown';
-    const paths = formatRelativePaths(resources);
+    const references = formatRelativeReferences(resources);
+    const paths = references.map(reference => `@${reference.displayPath}`).join('\n');
 
     outputChannel.info(`Sending to port ${port}, cwd: ${workspaceDir}`);
     outputChannel.debug(`Content: "${paths}"`);
 
-    const result = await openCodeClient.appendPrompt(paths);
-    outputChannel.debug(`Result: ${result}`);
-
+    const result = await openCodeClient.appendFileReferences(references);
     if (!result) {
       throw new Error('OpenCode did not accept the selected paths');
     }
+    outputChannel.debug(`Result: ${JSON.stringify(result)}`);
 
     const count = resources.length;
     showTransientNotification(`Sent ${count} relative path${count > 1 ? 's' : ''}`);

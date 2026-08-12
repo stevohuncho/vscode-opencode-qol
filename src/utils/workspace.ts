@@ -20,6 +20,18 @@ export interface WorkspaceRootInfo {
   isPrimary: boolean;
 }
 
+/** Structured active-file reference information for OpenCode message parts. */
+export interface ActiveFileReference {
+  /** Absolute file system path. */
+  filePath: string;
+  /** Workspace-relative path using the platform's path separator. */
+  relativePath: string;
+  /** One-based inclusive starting line, when a selection exists. */
+  startLine?: number;
+  /** One-based inclusive ending line, when a selection exists. */
+  endLine?: number;
+}
+
 /**
  * Result of workspace detection
  */
@@ -206,7 +218,11 @@ export const WorkspaceUtils = {
     return crypto.createHash('md5').update(workspacePath).digest('hex').substring(0, 8);
   },
 
-  getActiveFileRef(): string | undefined {
+  /**
+   * Get the active file and optional one-based selected line range.
+   * @returns Structured active file reference, or undefined when unavailable
+   */
+  getActiveFileReference(): ActiveFileReference | undefined {
     const activeEditor = vscode.window.activeTextEditor;
     if (!activeEditor) {
       return undefined;
@@ -220,19 +236,39 @@ export const WorkspaceUtils = {
 
     const relativePath = vscode.workspace.asRelativePath(document.uri);
     const normalizedPath = relativePath.replace(/\//g, path.sep);
-    let ref = `@${normalizedPath}`;
+    const reference: ActiveFileReference = {
+      filePath: document.uri.fsPath,
+      relativePath: normalizedPath,
+    };
 
     const selection = activeEditor.selection;
     if (!selection.isEmpty) {
       const startLine = selection.start.line + 1;
       const endLine = selection.end.line + 1;
-      if (startLine === endLine) {
-        ref += `#L${startLine}`;
-      } else {
-        ref += `#L${startLine}-${endLine}`;
-      }
+      reference.startLine = startLine;
+      reference.endLine = endLine;
     }
 
+    return reference;
+  },
+
+  /**
+   * Get the active file reference in OpenCode's inline reference syntax.
+   * @returns Formatted reference, or undefined when unavailable
+   */
+  getActiveFileRef(): string | undefined {
+    const reference = this.getActiveFileReference();
+    if (!reference) {
+      return undefined;
+    }
+
+    let ref = `@${reference.relativePath}`;
+    if (reference.startLine !== undefined) {
+      ref += `#${reference.startLine}`;
+      if (reference.endLine !== undefined && reference.endLine !== reference.startLine) {
+        ref += `-${reference.endLine}`;
+      }
+    }
     return ref;
   },
 };

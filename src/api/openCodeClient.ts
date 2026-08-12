@@ -5,6 +5,8 @@
 import {
   AgentInfo,
   CommandInfo,
+  FileMessagePart,
+  FileReferenceInput,
   HealthResponse,
   MessageInput,
   PathResponse,
@@ -25,6 +27,8 @@ import {
 
 import axios, { AxiosError, AxiosInstance } from 'axios';
 import axiosRetry, { IAxiosRetryConfig } from 'axios-retry';
+import * as path from 'path';
+import { pathToFileURL } from 'url';
 
 /**
  * Configuration options for OpenCodeClient
@@ -55,6 +59,28 @@ const DEFAULT_CONFIG: Required<OpenCodeClientConfig> = {
   retryDelay: 500,
   maxRetryDelay: 10000,
 };
+
+function normalizeDirectory(directory: string): string {
+  const normalized = path.resolve(directory).replace(/[\\/]+$/, '');
+  return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
+}
+
+function isWithinDirectory(filePath: string, directory: string): boolean {
+  const relative = path.relative(directory, filePath);
+  return relative === '' || (relative !== '..' && !relative.startsWith(`..${path.sep}`));
+}
+
+function formatFileReference(reference: FileReferenceInput): string {
+  const displayPath = reference.displayPath.replace(/^@/, '');
+  const startLine = reference.startLine;
+  const endLine = reference.endLine ?? startLine;
+  const lineSuffix =
+    startLine === undefined
+      ? ''
+      : `#${startLine}${endLine !== undefined && endLine !== startLine ? `-${endLine}` : ''}`;
+
+  return `@${displayPath}${lineSuffix}`;
+}
 
 /**
  * Build the OpenCode event-stream URL for a runtime port.
@@ -340,6 +366,87 @@ export class OpenCodeClient {
   public async sendMessage(sessionId: string, input: MessageInput): Promise<unknown> {
     const response = await this.client.post(`/session/${sessionId}/message`, input);
     return response.data;
+  }
+
+  /**
+   * Send file references as structured parts to the most recently updated session
+   * for a workspace. This bypasses TUI mention parsing and preserves line ranges.
+   * @param workspaceDirectory - Workspace directory served by OpenCode
+   * @param references - Files to attach to the message
+   * @param text - Optional text part to send before the file parts
+   * @returns The OpenCode message response
+   * @throws Error when no session exists for the workspace
+   */
+  public async sendFileReferences(
+    workspaceDirectory: string,
+    references: readonly FileReferenceInput[],
+    text?: string
+  ): Promise<unknown> {
+    const sessions = await this.listSessions();
+    const normalizedWorkspace = normalizeDirectory(workspaceDirectory);
+    const session = sessions
+      .filter(item => normalizeDirectory(item.directory) === normalizedWorkspace)
+      .sort((left, right) => right.time.updated - left.time.updated)[0];
+
+    if (!session) {
+      throw new Error(`No OpenCode session found for workspace "${workspaceDirectory}"`);
+    }
+
+    const parts: MessageInput['parts'] = [];
+    if (text) {
+      parts.push({ type: 'text', text });
+    }
+
+    for (const reference of references) {
+      const referenceText = formatFileReference(reference);
+      const startLine = reference.startLine;
+      const endLine = reference.endLine ?? startLine;
+      const url = pathToFileURL(reference.filePath);
+
+      if (startLine !== undefined) {
+        url.searchParams.set('start', String(startLine));
+        if (endLine !== undefined) {
+          url.searchParams.set('end', String(endLine));
+        }
+      }
+
+      const sourcePath = isWithinDirectory(reference.filePath, workspaceDirectory)
+        ? path.relative(workspaceDirectory, reference.filePath)
+        : reference.filePath;
+      const part: FileMessagePart = {
+        type: 'file',
+        mime: reference.mimeType ?? 'text/plain',
+        filename: path.basename(reference.filePath),
+        url: url.toString(),
+        source: {
+          type: 'file',
+          path: sourcePath,
+          text: {
+            value: referenceText,
+            start: 0,
+            end: referenceText.length,
+          },
+        },
+      };
+      parts.push(part);
+    }
+
+    return this.sendMessage(session.id, { parts });
+  }
+
+  /**
+   * Append file references to the active TUI prompt without submitting it.
+   * @param references - Files to add using OpenCode's inline reference syntax
+   * @param text - Optional text to append before the file references
+   * @returns Whether OpenCode accepted the prompt update
+   */
+  public async appendFileReferences(
+    references: readonly FileReferenceInput[],
+    text?: string
+  ): Promise<boolean> {
+    const referenceText = references.map(formatFileReference).join('\n');
+    const prompt = [text, referenceText].filter(Boolean).join('\n');
+    return this.appendPrompt(prompt);
   }
 
   /**

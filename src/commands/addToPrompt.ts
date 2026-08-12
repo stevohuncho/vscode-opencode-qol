@@ -12,7 +12,8 @@ export async function handleAddToPrompt(
   outputChannel: vscode.LogOutputChannel
 ): Promise<void> {
   const ref = WorkspaceUtils.getActiveFileRef();
-  if (!ref) {
+  const fileReference = WorkspaceUtils.getActiveFileReference();
+  if (!ref || !fileReference) {
     await vscode.window.showWarningMessage('No active file to reference');
     return;
   }
@@ -40,16 +41,20 @@ export async function handleAddToPrompt(
   }
 
   try {
+    if (!workspacePath) {
+      throw new Error('The active file is not inside an OpenCode workspace');
+    }
     const port = openCodeClient.getPort();
     const workspaceDir = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || 'unknown';
     outputChannel.info(`[addToPrompt] Sending to port ${port}, cwd: ${workspaceDir}`);
     outputChannel.debug(`[addToPrompt] Content: "${ref}"`);
-    const result = await openCodeClient.appendPrompt(ref);
-    outputChannel.debug(`[addToPrompt] Result: ${result}`);
-
+    const result = await openCodeClient.appendFileReferences([
+      { ...fileReference, displayPath: fileReference.relativePath },
+    ]);
     if (!result) {
       throw new Error('OpenCode did not accept the prompt reference');
     }
+    outputChannel.debug(`[addToPrompt] Result: ${JSON.stringify(result)}`);
 
     showTransientNotification(`Sent: ${ref}`);
 

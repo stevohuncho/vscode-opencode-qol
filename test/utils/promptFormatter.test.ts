@@ -34,7 +34,7 @@ describe('promptFormatter', () => {
       const result = formatExplainAndFixPrompt(diagnostic, uri, getRelativePath);
 
       expect(result).toBe(
-        'Explain what this problem is and help me fix it: Type "string" is not assignable to type "number" [TS2322] @src/main.ts#L11'
+        'Explain what this problem is and help me fix it: Type "string" is not assignable to type "number" [TS2322] @src/main.ts#11'
       );
     });
 
@@ -60,7 +60,7 @@ describe('promptFormatter', () => {
       const result = formatExplainAndFixPrompt(diagnostic, uri, getRelativePath);
 
       expect(result).toBe(
-        'Explain what this problem is and help me fix it: Cannot find name "console" [TS2304] @src/utils.ts#L6'
+        'Explain what this problem is and help me fix it: Cannot find name "console" [TS2304] @src/utils.ts#6'
       );
     });
 
@@ -86,7 +86,7 @@ describe('promptFormatter', () => {
       const result = formatExplainAndFixPrompt(diagnostic, uri, getRelativePath);
 
       expect(result).toContain('[TS2448]');
-      expect(result).toContain('@src/app.ts#L1');
+      expect(result).toContain('@src/app.ts#1');
     });
 
     it('should handle diagnostic without code', () => {
@@ -110,7 +110,7 @@ describe('promptFormatter', () => {
       const result = formatExplainAndFixPrompt(diagnostic, uri, getRelativePath);
 
       expect(result).toBe(
-        'Explain what this problem is and help me fix it: Unexpected console statement @src/script.js#L21'
+        'Explain what this problem is and help me fix it: Unexpected console statement @src/script.js#21'
       );
     });
 
@@ -135,7 +135,7 @@ describe('promptFormatter', () => {
       const result = formatExplainAndFixPrompt(diagnostic, uri, getRelativePath);
 
       expect(result).toContain('information message');
-      expect(result).toContain('@src/info.ts#L2');
+      expect(result).toContain('@src/info.ts#2');
     });
 
     it('should handle hint severity', () => {
@@ -159,7 +159,7 @@ describe('promptFormatter', () => {
       const result = formatExplainAndFixPrompt(diagnostic, uri, getRelativePath);
 
       expect(result).toContain('Consider using const instead of let');
-      expect(result).toContain('@src/hint.ts#L4');
+      expect(result).toContain('@src/hint.ts#4');
     });
 
     it('should handle messages with special characters', () => {
@@ -183,7 +183,7 @@ describe('promptFormatter', () => {
       const result = formatExplainAndFixPrompt(diagnostic, uri, getRelativePath);
 
       expect(result).toContain('Unexpected token `}` in JSON at position 42');
-      expect(result).toContain('@src/config.json#L1');
+      expect(result).toContain('@src/config.json#1');
     });
 
     it('should handle deeply nested paths', () => {
@@ -207,7 +207,7 @@ describe('promptFormatter', () => {
       const result = formatExplainAndFixPrompt(diagnostic, uri, getRelativePath);
 
       expect(result).toContain('src/components/ui/buttons/submitButton.tsx');
-      expect(result).toContain('#L6');
+      expect(result).toContain('#6');
     });
 
     it('should handle numeric error code', () => {
@@ -253,7 +253,7 @@ describe('promptFormatter', () => {
       const result = formatExplainAndFixPrompt(diagnostic, uri);
 
       // Default returns fsPath
-      expect(result).toContain('@/test/file.ts#L1');
+      expect(result).toContain('@/test/file.ts#1');
     });
   });
 });

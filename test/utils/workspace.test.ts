@@ -4,12 +4,18 @@
 import { WorkspaceUtils } from '../../src/utils/workspace';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import * as vscode from 'vscode';
 
 // Mock vscode module before importing WorkspaceUtils
 vi.mock('vscode', () => ({
   workspace: {
     workspaceFolders: undefined,
     name: undefined,
+    asRelativePath: vi.fn(),
+    getWorkspaceFolder: vi.fn(),
+  },
+  window: {
+    activeTextEditor: undefined,
   },
   Uri: {
     parse: vi.fn((str: string) => ({
@@ -70,5 +76,29 @@ describe('getWorkspaceHash', () => {
     const hash = WorkspaceUtils.getWorkspaceHash(longPath);
     expect(hash).toHaveLength(8);
     expect(hash).toMatch(/^[0-9a-f]+$/);
+  });
+});
+
+describe('getActiveFileRef', () => {
+  beforeEach(() => {
+    vi.mocked(vscode.workspace.asRelativePath).mockReturnValue('src/extension.ts');
+    vi.mocked(vscode.workspace.getWorkspaceFolder).mockReturnValue({
+      uri: { fsPath: '/workspace' },
+    } as vscode.WorkspaceFolder);
+  });
+
+  it('uses OpenCode-compatible line ranges for a selection', () => {
+    vi.mocked(vscode.window).activeTextEditor = {
+      document: {
+        uri: { fsPath: '/workspace/src/extension.ts' },
+      },
+      selection: {
+        isEmpty: false,
+        start: { line: 38 },
+        end: { line: 102 },
+      },
+    } as vscode.TextEditor;
+
+    expect(WorkspaceUtils.getActiveFileRef()).toBe('@src/extension.ts#39-103');
   });
 });

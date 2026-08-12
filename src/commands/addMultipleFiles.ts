@@ -84,10 +84,14 @@ export async function handleAddMultipleFiles(
         return `@${relativePath}`;
       })
       .join(' ');
+    const references = selected.map(item => ({
+      filePath: item.detail!,
+      displayPath: (item.description || '') + item.label,
+      mimeType: 'text/plain',
+    }));
 
     outputChannel.debug(`[addMultipleFiles] Sending: "${refs}"`);
-    const sent = await openCodeClient.appendPrompt(refs);
-
+    const sent = await openCodeClient.appendFileReferences(references);
     if (!sent) {
       throw new Error('OpenCode did not accept the file references');
     }

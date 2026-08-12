@@ -35,7 +35,27 @@ export async function handleExplainAndFix(
     const prompt = formatPromptForDiagnostic(diagnostic, uri, uriInfo =>
       vscode.workspace.asRelativePath(uriInfo.fsPath)
     );
-    const sent = await openCodeClient.appendPrompt(prompt);
+    const relativePath = vscode.workspace.asRelativePath(uri);
+    const lineNumber = diagnostic.range.start.line + 1;
+    const reference = `@${relativePath}#${lineNumber}`;
+    const text = prompt.endsWith(reference)
+      ? prompt.slice(0, prompt.length - reference.length).trimEnd()
+      : prompt;
+
+    if (!workspacePath) {
+      throw new Error('The diagnostic file is not inside an OpenCode workspace');
+    }
+    const sent = await openCodeClient.appendFileReferences(
+      [
+        {
+          filePath: uri.fsPath,
+          displayPath: relativePath,
+          startLine: lineNumber,
+          endLine: lineNumber,
+        },
+      ],
+      text
+    );
     if (!sent) {
       throw new Error('OpenCode did not accept the explanation request');
     }

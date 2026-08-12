@@ -37,8 +37,8 @@ You shouldn't have to choose between a great editor (VS Code) and a great AI age
 
 | Command | Description | Keyboard Shortcut |
 |---------|-------------|-------------------|
-| `OpenCode: Add to Prompt` | Send the current file reference (e.g., `@src/main.ts#L10-L20`) to the TUI | `Ctrl+Shift+A` / `Cmd+Shift+A` |
-| `OpenCode: Add Selection to Prompt` | Send the selected code range (e.g., `@src/main.ts#L10-L20`) to the TUI | Right-click in editor |
+   | `OpenCode: Add to Prompt` | Append the current file reference (e.g., `@src/main.ts#10-20`) to the active prompt | `Ctrl+Shift+A` / `Cmd+Shift+A` |
+   | `OpenCode: Add Selection to Prompt` | Append the selected code range (e.g., `@src/main.ts#10-20`) to the active prompt | Right-click in editor |
 | `OpenCode: Select Files to Add` | Open a file picker to select multiple files to add to the prompt | `Ctrl+Shift+Alt+A` / `Cmd+Shift+Alt+A` |
 | `OpenCode: Paste Clipboard Image` | Paste a local clipboard image into a local or remote OpenCode prompt | Command Palette |
 | `OpenCode: Open in OpenCode` | Open an OpenCode instance for the current workspace as an editor tab | Editor title bar / Explorer right-click |
@@ -58,7 +58,7 @@ A terminal button (⬛) appears in the editor title bar for quick access. Clicki
 
 Right-click inside any editor to send your selection directly to OpenCode:
 
-- **Add Selection to OpenCode**: Sends the selected code range as `@file#L10-L20` to the active OpenCode instance.
+- **Add Selection to OpenCode**: Appends the selected code range to the active OpenCode prompt.
   - Appears only when text is selected (`editorHasSelection`).
 
 ### Explorer Context Menu
@@ -100,7 +100,7 @@ All send commands automatically route to the **correct OpenCode instance** for t
 2.  The extension will find or spawn an OpenCode TUI session for your workspace.
 3.  Click the **⬛ button** in the editor title bar (or right-click a folder → **Open in OpenCode**) to open the TUI as an editor tab.
 4.  Use **`OpenCode: Add to Prompt`** (`Ctrl+Shift+A`) to reference your current file in the TUI.
-5.  **Select code** in the editor, right-click → **Add Selection to OpenCode** to send the exact line range.
+5.  **Select code** in the editor, right-click → **Add Selection to OpenCode** to send the exact line range without manually submitting the TUI prompt.
 6.  Use **`OpenCode: Select Files to Add`** (`Ctrl+Shift+Alt+A`) to pick multiple files at once.
 7.  Use **`Explain and Fix (OpenCode)`** to quickly fix errors — hover over any error or click the lightbulb.
 

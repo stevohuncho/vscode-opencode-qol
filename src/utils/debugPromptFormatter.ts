@@ -34,7 +34,7 @@ export function formatDebugContext(context: DebugContext): string {
       const source = frame.source || 'unknown';
       const line = frame.line || 1;
       const name = frame.name || 'anonymous';
-      return `@${source}#L${line} in ${name}`;
+      return `@${source}#${line} in ${name}`;
     });
 
   const variableLines = context.variables.map((v: VariableInfo) => {

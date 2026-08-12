@@ -24,7 +24,7 @@ describe('debugPromptFormatter', () => {
 
       const result = formatDebugContext(context);
 
-      expect(result).toContain('@/workspace/project/src/index.ts#L10 in myFunction');
+      expect(result).toContain('@/workspace/project/src/index.ts#10 in myFunction');
     });
 
     it('should format variables with name = value', () => {
@@ -175,7 +175,7 @@ describe('debugPromptFormatter', () => {
 
       const result = formatDebugContext(context);
 
-      expect(result).toContain('@unknown#L5 in anonymous');
+      expect(result).toContain('@unknown#5 in anonymous');
     });
 
     it('should format prompt with both stack frames and variables', () => {
@@ -198,7 +198,7 @@ describe('debugPromptFormatter', () => {
 
       expect(result).toContain('Debug this for me:');
       expect(result).toContain('Stack trace:');
-      expect(result).toContain('@/workspace/project/src/button.tsx#L25 in handleClick');
+      expect(result).toContain('@/workspace/project/src/button.tsx#25 in handleClick');
       expect(result).toContain('Variables:');
       expect(result).toContain('isActive = true');
       expect(result).toContain('count = 5');

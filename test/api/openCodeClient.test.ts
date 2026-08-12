@@ -281,6 +281,68 @@ describe('OpenCodeClient', () => {
   });
 
   // ===========================================================================
+  // sendFileReferences
+  // ===========================================================================
+
+  describe('sendFileReferences', () => {
+    it('sends a structured file part with the selected line range', async () => {
+      mockHttp.get.mockResolvedValueOnce({
+        data: [
+          { id: 'old', title: 'Old', directory: '/workspace', time: { created: 1, updated: 2 } },
+          {
+            id: 'current',
+            title: 'Current',
+            directory: '/workspace',
+            time: { created: 3, updated: 4 },
+          },
+        ],
+      });
+      mockHttp.post.mockResolvedValueOnce({ data: { info: { id: 'message' }, parts: [] } });
+
+      const client = createClient();
+      await client.sendFileReferences('/workspace', [
+        {
+          filePath: '/workspace/src/index.ts',
+          displayPath: 'src/index.ts',
+          startLine: 10,
+          endLine: 15,
+        },
+      ]);
+
+      expect(mockHttp.post).toHaveBeenCalledWith('/session/current/message', {
+        parts: [
+          {
+            type: 'file',
+            mime: 'text/plain',
+            filename: 'index.ts',
+            url: 'file:///workspace/src/index.ts?start=10&end=15',
+            source: {
+              type: 'file',
+              path: 'src/index.ts',
+              text: { value: '@src/index.ts#10-15', start: 0, end: 19 },
+            },
+          },
+        ],
+      });
+    });
+
+    it('rejects when no session matches the workspace', async () => {
+      mockHttp.get.mockResolvedValueOnce({
+        data: [
+          { id: 'other', title: 'Other', directory: '/other', time: { created: 1, updated: 2 } },
+        ],
+      });
+
+      const client = createClient();
+      await expect(
+        client.sendFileReferences('/workspace', [
+          { filePath: '/workspace/src/index.ts', displayPath: 'src/index.ts' },
+        ])
+      ).rejects.toThrow('No OpenCode session found for workspace "/workspace"');
+    });
+  });
+
+  // ===========================================================================
   // appendPrompt
   // ===========================================================================
 
@@ -302,6 +364,36 @@ describe('OpenCodeClient', () => {
       const result = await client.appendPrompt('test');
 
       expect(result).toBe(false);
+    });
+  });
+
+  // ===========================================================================
+  // appendFileReferences
+  // ===========================================================================
+
+  describe('appendFileReferences', () => {
+    it('appends inline references to the active prompt without sending a session message', async () => {
+      mockHttp.post.mockResolvedValueOnce({ data: true });
+
+      const client = createClient();
+      const result = await client.appendFileReferences(
+        [
+          { filePath: '/workspace/src/index.ts', displayPath: 'src/index.ts' },
+          {
+            filePath: '/workspace/src/app.ts',
+            displayPath: '@src/app.ts',
+            startLine: 10,
+            endLine: 15,
+          },
+        ],
+        'Please inspect these files'
+      );
+
+      expect(mockHttp.post).toHaveBeenCalledWith('/tui/append-prompt', {
+        text: 'Please inspect these files\n@src/index.ts\n@src/app.ts#10-15',
+      });
+      expect(mockHttp.get).not.toHaveBeenCalled();
+      expect(result).toBe(true);
     });
   });
 

@@ -12,7 +12,8 @@ export async function handleAddSelectionToPrompt(
   outputChannel: vscode.LogOutputChannel
 ): Promise<void> {
   const ref = WorkspaceUtils.getActiveFileRef();
-  if (!ref) {
+  const fileReference = WorkspaceUtils.getActiveFileReference();
+  if (!ref || !fileReference) {
     await vscode.window.showWarningMessage('OpenCode: No active file or selection to reference');
     return;
   }
@@ -38,16 +39,20 @@ export async function handleAddSelectionToPrompt(
   }
 
   try {
+    if (!workspacePath) {
+      throw new Error('The active selection is not inside an OpenCode workspace');
+    }
     const port = openCodeClient.getPort();
     const workspaceDir = workspacePath ?? 'unknown';
     outputChannel.info(`Sending to port ${port}, cwd: ${workspaceDir}`);
     outputChannel.debug(`Content: "${ref}"`);
-    const result = await openCodeClient.appendPrompt(ref);
-    outputChannel.debug(`Result: ${result}`);
-
+    const result = await openCodeClient.appendFileReferences([
+      { ...fileReference, displayPath: fileReference.relativePath },
+    ]);
     if (!result) {
       throw new Error('OpenCode did not accept the code reference');
     }
+    outputChannel.debug(`Result: ${JSON.stringify(result)}`);
 
     showTransientNotification(`Sent: ${ref}`);
 

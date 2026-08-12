@@ -1,5 +1,5 @@
 import { ConnectionService } from '../connection/connectionService';
-import { formatPaths } from '../utils/pathUtils';
+import { formatAbsolutePath, isDirectory } from '../utils/pathUtils';
 
 import * as vscode from 'vscode';
 
@@ -41,13 +41,17 @@ export async function handleSendPath(
     const port = openCodeClient.getPort();
     const workspaceDir =
       workspacePath ?? vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? 'unknown';
-    const paths = formatPaths(resources);
+    const references = resources.map(uri => ({
+      filePath: uri.fsPath,
+      displayPath: formatAbsolutePath(uri.fsPath).slice(1),
+      mimeType: isDirectory(uri.fsPath) ? 'application/x-directory' : 'text/plain',
+    }));
+    const paths = references.map(reference => `@${reference.displayPath}`).join('\n');
 
     outputChannel.info(`[sendPath] Sending to port ${port}, cwd: ${workspaceDir}`);
     outputChannel.debug(`[sendPath] Content: "${paths}"`);
 
-    const sent = await openCodeClient.appendPrompt(paths);
-
+    const sent = await openCodeClient.appendFileReferences(references);
     if (!sent) {
       throw new Error('OpenCode did not accept the selected paths');
     }
