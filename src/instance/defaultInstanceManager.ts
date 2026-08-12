@@ -95,7 +95,7 @@ export class DefaultInstanceManager {
         }
       });
 
-      socket.connect(port, 'localhost');
+      socket.connect(port, '127.0.0.1');
     });
   }
 }

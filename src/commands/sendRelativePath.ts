@@ -62,6 +62,10 @@ export async function handleSendRelativePath(
     const result = await openCodeClient.appendPrompt(paths);
     outputChannel.debug(`Result: ${result}`);
 
+    if (!result) {
+      throw new Error('OpenCode did not accept the selected paths');
+    }
+
     const count = resources.length;
     showTransientNotification(`Sent ${count} relative path${count > 1 ? 's' : ''}`);
 

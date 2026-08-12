@@ -1,27 +1,51 @@
-import { ConnectionService } from '../connection/connectionService';
+import { ConnectionService, pathsMatch } from '../connection/connectionService';
+import { WorkspaceUtils } from '../utils/workspace';
 
 import * as vscode from 'vscode';
 
 export async function handleCheckInstance(connectionService: ConnectionService): Promise<void> {
-  const configManager = connectionService.getConfigManager();
-  const port = configManager?.getPort() || 4096;
-  const result = await connectionService.getRunningInstance(port);
+  const activeUri = vscode.window.activeTextEditor?.document.uri;
+  const activeWorkspace = activeUri
+    ? vscode.workspace.getWorkspaceFolder(activeUri)?.uri.fsPath
+    : undefined;
+  const workspacePath = activeWorkspace ?? WorkspaceUtils.getWorkspacePath();
 
-  if (result.isRunning) {
-    await vscode.window.showInformationMessage(`OpenCode instance running on port ${port}`);
-  } else {
-    const choice = await vscode.window.showWarningMessage(
-      `No OpenCode instance detected on port ${port}`,
-      'Start Instance'
+  if (!workspacePath) {
+    await vscode.window.showWarningMessage(
+      'Open a workspace folder before checking clipboard image support.'
     );
+    return;
+  }
 
-    if (choice === 'Start Instance') {
-      const spawnResult = await connectionService.spawnInstance(port);
-      if (spawnResult.success) {
-        await vscode.window.showInformationMessage('OpenCode instance started');
-      } else {
-        await vscode.window.showErrorMessage(`Failed to start instance: ${spawnResult.error}`);
-      }
+  try {
+    const connected = await connectionService.ensureConnectedForWorkspace(workspacePath);
+    const client = connectionService.getClient();
+
+    if (!connected || !client) {
+      const autoSpawnError = connectionService.getLastAutoSpawnError();
+      await vscode.window.showErrorMessage(
+        autoSpawnError
+          ? `OpenCode is not ready for clipboard images: ${autoSpawnError}`
+          : 'No OpenCode instance is available for this workspace.'
+      );
+      return;
     }
+
+    const pathInfo = await client.getPath();
+    if (!pathsMatch(pathInfo.directory, workspacePath)) {
+      await vscode.window.showErrorMessage(
+        `OpenCode is connected to "${pathInfo.directory}", not this workspace.`
+      );
+      return;
+    }
+
+    const port = connectionService.getPort();
+    await vscode.window.showInformationMessage(
+      `OpenCode is ready for clipboard images${port ? ` on port ${port}` : ''}.`
+    );
+  } catch (err) {
+    await vscode.window.showErrorMessage(
+      `OpenCode is not ready for clipboard images: ${(err as Error).message}`
+    );
   }
 }

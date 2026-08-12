@@ -84,6 +84,15 @@ export async function handleSelectDefaultInstance(
     }
   }
 
+  // Process scanners are not always available on macOS/Linux. Include a
+  // workspace-verified known port when process metadata cannot be read.
+  if (workspaceInstances.length === 0) {
+    const fallbackPort = await connectionService.findPortForWorkspace(workspaceDir);
+    if (fallbackPort !== undefined) {
+      workspaceInstances.push({ port: fallbackPort, title: 'Default Session' });
+    }
+  }
+
   if (workspaceInstances.length === 0) {
     await vscode.window.showInformationMessage('No OpenCode instances found for current workspace');
     return;
@@ -124,7 +133,7 @@ export async function handleSelectDefaultInstance(
   outputChannel.info(`[selectDefaultInstance] Default port set to ${selectedPort}`);
 
   // Connect to the selected instance
-  const connected = await connectionService.ensureConnected();
+  const connected = await connectionService.ensureConnectedForWorkspace(workspaceDir);
 
   if (connected) {
     await vscode.window.showInformationMessage(`Default instance set to port ${selectedPort}`);

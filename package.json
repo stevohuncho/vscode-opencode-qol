@@ -220,7 +220,7 @@
     "lint": "eslint src --ext ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "pack": "vsce package -o dist/opencode-connector.vsix"
+    "pack": "node -e \"require('fs').mkdirSync('dist', { recursive: true })\" && vsce package --out ./dist/opencode-connector.vsix"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",

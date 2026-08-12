@@ -2,7 +2,12 @@
  * Tests for InstanceManager
  */
 import { ConfigManager } from '../../src/config';
-import { InstanceManager, PlatformUtils } from '../../src/instance/instanceManager';
+import {
+  InstanceManager,
+  PlatformUtils,
+  parseLsofOutput,
+  parseSsOutput,
+} from '../../src/instance/instanceManager';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as vscode from 'vscode';
@@ -202,6 +207,40 @@ describe('PlatformUtils', () => {
       Object.defineProperty(process, 'platform', { value: 'linux' });
       expect(PlatformUtils.getCommandWithExtension('opencode')).toBe('opencode');
     });
+  });
+});
+
+describe('Unix process output parsing', () => {
+  it('parses OpenCode listeners from Linux ss output', () => {
+    const output = [
+      'State Recv-Q Send-Q Local Address:Port Peer Address:Port Process',
+      'LISTEN 0 128 127.0.0.1:4096 0.0.0.0:* users:(("opencode",pid=1234,fd=7))',
+      'LISTEN 0 128 127.0.0.1:4097 0.0.0.0:* users:(("opencode-helper",pid=1235,fd=7))',
+    ].join('\n');
+
+    expect(parseSsOutput(output)).toEqual([{ pid: 1234, port: 4096 }]);
+  });
+
+  it('parses IPv6 and wildcard listeners from ss output', () => {
+    const output = [
+      'LISTEN 0 128 [::]:4096 [::]:* users:(("opencode",pid=1234,fd=7))',
+      'LISTEN 0 128 *:4097 *:* users:(("opencode",pid=1235,fd=7))',
+    ].join('\n');
+
+    expect(parseSsOutput(output)).toEqual([
+      { pid: 1234, port: 4096 },
+      { pid: 1235, port: 4097 },
+    ]);
+  });
+
+  it('parses OpenCode listeners from macOS lsof output', () => {
+    const output = [
+      'COMMAND   PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME',
+      'opencode 1234 steve  7u  IPv4 123456      0t0  TCP 127.0.0.1:4096 (LISTEN)',
+      'opencode-helper 1235 steve  7u  IPv4 123457 0t0 TCP 127.0.0.1:4097 (LISTEN)',
+    ].join('\n');
+
+    expect(parseLsofOutput(output)).toEqual([{ pid: 1234, port: 4096 }]);
   });
 });
 

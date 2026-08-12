@@ -13,7 +13,13 @@ export async function handleSendDebugContext(
   outputChannel: vscode.LogOutputChannel
 ): Promise<void> {
   try {
-    const connected = await connectionService.ensureConnected();
+    const activeUri = vscode.window.activeTextEditor?.document.uri;
+    const workspacePath = activeUri
+      ? vscode.workspace.getWorkspaceFolder(activeUri)?.uri.fsPath
+      : vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const connected = workspacePath
+      ? await connectionService.ensureConnectedForWorkspace(workspacePath)
+      : await connectionService.ensureConnected();
     const openCodeClient = connectionService.getClient();
     const lastAutoSpawnError = connectionService.getLastAutoSpawnError();
 
@@ -35,7 +41,10 @@ export async function handleSendDebugContext(
     }
 
     const prompt = formatDebugContext(debugContext);
-    await openCodeClient.appendPrompt(prompt);
+    const sent = await openCodeClient.appendPrompt(prompt);
+    if (!sent) {
+      throw new Error('OpenCode did not accept the debug context');
+    }
 
     outputChannel.info('Sent debug context to OpenCode');
     vscode.window.setStatusBarMessage(`$(check) Sent debug context to OpenCode`, 3000);

@@ -171,6 +171,20 @@ describe('ConnectionService', () => {
     expect(service.getPort()).toBe(4100);
   });
 
+  it('checks known fallback ports when process discovery returns no metadata', async () => {
+    mockState.clientBehaviors.set(4096, {
+      getPath: { directory: '/workspace/app' },
+    });
+
+    const service = new ConnectionService(
+      configManager as never,
+      instanceManager as never,
+      outputChannel
+    );
+
+    await expect(service.findPortForWorkspace('/workspace/app')).resolves.toBe(4096);
+  });
+
   it('emits a disconnect event before reconnecting when the active port no longer matches the workspace', async () => {
     mockState.defaultPort = 4096;
     mockState.defaultIsValid = true;

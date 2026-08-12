@@ -73,6 +73,48 @@ export class ConnectionService {
     }
   }
 
+  private getCandidatePorts(processes: Array<{ port: number }>): number[] {
+    return [
+      ...processes.map(process => process.port),
+      this.connectedPort,
+      DefaultInstanceManager.getInstance().getDefaultPort(),
+      this.configManager.getPort(),
+    ].filter(
+      (port, index, ports): port is number => port !== undefined && ports.indexOf(port) === index
+    );
+  }
+
+  private async findMatchingPort(
+    ports: number[],
+    workspacePath: string,
+    logPrefix: string
+  ): Promise<number | undefined> {
+    for (const port of ports) {
+      let tempClient: OpenCodeClient | undefined;
+
+      try {
+        tempClient = new OpenCodeClient({ port, timeout: 3000, maxRetries: 0 });
+        const pathInfo = await tempClient.getPath();
+
+        this.outputChannel?.debug(
+          `${logPrefix} port ${port} server dir: "${pathInfo.directory}" vs workspace: "${workspacePath}"`
+        );
+
+        if (pathsMatch(pathInfo.directory, workspacePath)) {
+          return port;
+        }
+      } catch (err) {
+        this.outputChannel?.debug(
+          `${logPrefix} port ${port} did not respond: ${(err as Error).message}`
+        );
+      } finally {
+        tempClient?.destroy();
+      }
+    }
+
+    return undefined;
+  }
+
   /**
    * Discover a running OpenCode instance serving the current workspace directory.
    * Scans running processes, verifies each with GET /path, and matches against workspace CWD.
@@ -99,42 +141,34 @@ export class ConnectionService {
         `Attempt ${attempt}: Found ${processes.length} OpenCode process(es): ${processes.map(p => p.port).join(', ')}`
       );
 
-      if (processes.length === 0) {
+      const candidatePorts = this.getCandidatePorts(processes);
+      if (candidatePorts.length === 0) {
         continue;
       }
 
-      const uniquePorts = [...new Set(processes.map(p => p.port))];
-      let foundMatchingProcess = false;
+      const matchingPort = await this.findMatchingPort(
+        candidatePorts,
+        workspaceDir,
+        `[discoverAndConnect]`
+      );
+      if (matchingPort !== undefined) {
+        if (this.connectedPort !== matchingPort) {
+          this.setActiveConnection(matchingPort);
 
-      for (const port of uniquePorts) {
-        try {
-          const tempClient = new OpenCodeClient({ port, timeout: 3000, maxRetries: 0 });
-          const pathInfo = await tempClient.getPath();
-          tempClient.destroy();
-
-          this.outputChannel?.debug(
-            `Port ${port} server dir: "${pathInfo.directory}" vs workspace: "${workspaceDir}"`
+          this.outputChannel?.info(
+            `OpenCode Connector: auto-connected to instance on port ${matchingPort}`
           );
-
-          if (pathsMatch(pathInfo.directory, workspaceDir)) {
-            foundMatchingProcess = true;
-            if (this.connectedPort !== port) {
-              this.setActiveConnection(port);
-
-              this.outputChannel?.info(
-                `OpenCode Connector: auto-connected to instance on port ${port}`
-              );
-            }
-            return true;
-          }
-        } catch (err) {
-          this.outputChannel?.warn(`Port ${port} error: ${(err as Error).message}`);
-          continue;
         }
+        return true;
       }
 
-      if (!foundMatchingProcess) {
-        this.outputChannel?.info('Processes found but none match workspace, giving up');
+      this.outputChannel?.info(
+        processes.length > 0
+          ? 'Processes and fallback ports found but none match workspace'
+          : 'No process metadata found; fallback ports did not match workspace'
+      );
+
+      if (processes.length > 0) {
         break;
       }
     }
@@ -161,28 +195,17 @@ export class ConnectionService {
 
   async findPortForWorkspace(workspacePath: string): Promise<number | undefined> {
     const processes = await this.instanceManager.scanForProcesses();
-    const uniquePorts = [...new Set(processes.map(p => p.port))];
+    const matchingPort = await this.findMatchingPort(
+      this.getCandidatePorts(processes),
+      workspacePath,
+      '[findPortForWorkspace]'
+    );
 
-    for (const port of uniquePorts) {
-      try {
-        const tempClient = new OpenCodeClient({ port, timeout: 3000, maxRetries: 0 });
-        const pathInfo = await tempClient.getPath();
-        tempClient.destroy();
-
-        this.outputChannel?.debug(
-          `Port ${port} → "${pathInfo.directory}" vs target "${workspacePath}"`
-        );
-
-        if (pathsMatch(pathInfo.directory, workspacePath)) {
-          this.outputChannel?.info(`Matched port ${port} for workspace "${workspacePath}"`);
-          return port;
-        }
-      } catch {
-        this.outputChannel?.debug(`Port ${port} did not respond`);
-      }
+    if (matchingPort !== undefined) {
+      this.outputChannel?.info(`Matched port ${matchingPort} for workspace "${workspacePath}"`);
     }
 
-    return undefined;
+    return matchingPort;
   }
 
   /**

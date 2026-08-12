@@ -87,15 +87,11 @@ export function activate(context: vscode.ExtensionContext): void {
 
     registerWorkspaceHandlers(context);
 
-    // Discover and connect in background
-    connectionService
-      .discoverAndConnect()
-      .then(connected => {
-        statusBarManager?.updateConnectionStatus(connected, connectionService?.getPort());
-      })
-      .catch(() => {
-        statusBarManager?.updateConnectionStatus(false);
-      });
+    // Discover and connect in background. Connection events are the single
+    // source of truth for the status bar and notification listener.
+    connectionService.discoverAndConnect().catch(err => {
+      outputChannel?.warn(`Background OpenCode discovery failed: ${(err as Error).message}`);
+    });
 
     outputChannel?.info(
       'OpenCode Connector fully initialized' +

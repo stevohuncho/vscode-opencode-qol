@@ -46,7 +46,11 @@ export async function handleSendPath(
     outputChannel.info(`[sendPath] Sending to port ${port}, cwd: ${workspaceDir}`);
     outputChannel.debug(`[sendPath] Content: "${paths}"`);
 
-    await openCodeClient.appendPrompt(paths);
+    const sent = await openCodeClient.appendPrompt(paths);
+
+    if (!sent) {
+      throw new Error('OpenCode did not accept the selected paths');
+    }
 
     const count = resources.length;
     showTransientNotification(`Sent ${count} path${count > 1 ? 's' : ''}`);

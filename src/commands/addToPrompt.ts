@@ -46,6 +46,11 @@ export async function handleAddToPrompt(
     outputChannel.debug(`[addToPrompt] Content: "${ref}"`);
     const result = await openCodeClient.appendPrompt(ref);
     outputChannel.debug(`[addToPrompt] Result: ${result}`);
+
+    if (!result) {
+      throw new Error('OpenCode did not accept the prompt reference');
+    }
+
     showTransientNotification(`Sent: ${ref}`);
 
     const configManager = connectionService.getConfigManager();

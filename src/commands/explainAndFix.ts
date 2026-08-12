@@ -13,7 +13,13 @@ export async function handleExplainAndFix(
   diagnostic: vscode.Diagnostic,
   uri: vscode.Uri
 ): Promise<void> {
-  const connected = await connectionService.ensureConnected();
+  const workspacePath = vscode.workspace.getWorkspaceFolder(uri)?.uri.fsPath;
+  outputChannel.debug(
+    `[explainAndFix] Target workspace: ${workspacePath ?? 'none detected, using connection fallback'}`
+  );
+  const connected = workspacePath
+    ? await connectionService.ensureConnectedForWorkspace(workspacePath)
+    : await connectionService.ensureConnected();
   const openCodeClient = connectionService.getClient();
   const lastAutoSpawnError = connectionService.getLastAutoSpawnError();
 
@@ -29,7 +35,10 @@ export async function handleExplainAndFix(
     const prompt = formatPromptForDiagnostic(diagnostic, uri, uriInfo =>
       vscode.workspace.asRelativePath(uriInfo.fsPath)
     );
-    await openCodeClient.appendPrompt(prompt);
+    const sent = await openCodeClient.appendPrompt(prompt);
+    if (!sent) {
+      throw new Error('OpenCode did not accept the explanation request');
+    }
     showTransientNotification(`Sent explanation request for diagnostic`);
 
     const configManager = connectionService.getConfigManager();

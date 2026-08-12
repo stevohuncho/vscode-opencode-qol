@@ -82,6 +82,65 @@ export interface DiscoveredProcess {
   port: number;
 }
 
+function isOpenCodeProcessName(name: string): boolean {
+  const processName = name.split(/[\\/]/).pop()?.replace(/^\./, '').toLowerCase();
+  return processName === 'opencode';
+}
+
+/**
+ * Parse listening OpenCode processes from `ss -tlnp` output.
+ * @param output - Raw output from the `ss` command
+ * @returns Discovered OpenCode processes
+ */
+export function parseSsOutput(output: string): DiscoveredProcess[] {
+  const results: DiscoveredProcess[] = [];
+
+  for (const line of output.split('\n')) {
+    if (!line.includes('LISTEN')) continue;
+
+    const processMatch = line.match(/users:\(\("([^"]+)"[^)]*pid=(\d+)/);
+    if (!processMatch || !isOpenCodeProcessName(processMatch[1])) continue;
+
+    const pid = parseInt(processMatch[2], 10);
+    const fields = line.trim().split(/\s+/);
+    const localAddress = fields.find(field => /:(\d+)$/.test(field));
+    const portMatch = localAddress?.match(/:(\d+)$/);
+    if (isNaN(pid) || !portMatch) continue;
+
+    const port = parseInt(portMatch[1], 10);
+    if (!isNaN(port)) {
+      results.push({ pid, port });
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Parse listening OpenCode processes from `lsof` output.
+ * @param output - Raw output from the `lsof` command
+ * @returns Discovered OpenCode processes
+ */
+export function parseLsofOutput(output: string): DiscoveredProcess[] {
+  const results: DiscoveredProcess[] = [];
+
+  for (const line of output.split('\n')) {
+    const parts = line.trim().split(/\s+/);
+    if (parts.length < 2 || !isOpenCodeProcessName(parts[0])) continue;
+
+    const pid = parseInt(parts[1], 10);
+    const portMatch = line.match(/:(\d+)\s+\(LISTEN\)/);
+    if (isNaN(pid) || !portMatch) continue;
+
+    const port = parseInt(portMatch[1], 10);
+    if (!isNaN(port)) {
+      results.push({ pid, port });
+    }
+  }
+
+  return results;
+}
+
 /**
  * Options for spawning an OpenCode terminal.
  */
@@ -219,7 +278,7 @@ export class InstanceManager {
       });
 
       // Attempt to connect
-      socket.connect(targetPort, 'localhost');
+      socket.connect(targetPort, '127.0.0.1');
     });
   }
 
@@ -359,7 +418,7 @@ export class InstanceManager {
 
   /**
    * Scan for running OpenCode processes and their listening ports.
-   * Platform-aware: uses pgrep+lsof on Unix, PowerShell on Windows.
+   * Platform-aware: uses ss with an lsof fallback on Unix, tasklist/netstat on Windows.
    * @returns Array of discovered processes with PIDs and ports
    */
   public async scanForProcesses(): Promise<DiscoveredProcess[]> {
@@ -375,45 +434,76 @@ export class InstanceManager {
 
   /**
    * Scan for OpenCode processes on Unix (Linux/macOS)
-   * Uses ss (socket statistics) for reliable detection in SSH environments
+   * Uses ss (socket statistics) with lsof fallback for macOS and restricted Linux environments.
    */
   private scanProcessesUnix(): Promise<DiscoveredProcess[]> {
     return new Promise(resolve => {
       const ss = child_process.spawn('ss', ['-tlnp']);
       let ssOut = '';
+      let fallbackStarted = false;
+
+      const scanWithLsof = (): void => {
+        if (fallbackStarted) return;
+        fallbackStarted = true;
+        this.scanProcessesLsof()
+          .then(resolve)
+          .catch(() => resolve([]));
+      };
 
       ss.stdout.on('data', data => {
         ssOut += data.toString();
       });
       ss.on('error', err => {
         this.logger?.warn(`[scanProcessesUnix] ss error: ${err.message}`);
-        resolve([]);
+        scanWithLsof();
       });
       ss.on('close', () => {
-        const results: DiscoveredProcess[] = [];
+        if (fallbackStarted) return;
 
-        for (const line of ssOut.split('\n')) {
-          if (!line.includes('LISTEN')) continue;
+        const results = parseSsOutput(ssOut);
 
-          const processMatch = line.match(/users:\(\("(?:\.?opencode)"[^)]+\)/);
-          if (!processMatch) continue;
-
-          const pidMatch = line.match(/pid=(\d+)/);
-          if (!pidMatch) continue;
-
-          const pid = parseInt(pidMatch[1], 10);
-
-          const portMatch = line.match(/(\d+\.\d+\.\d+\.\d+|\[::\]|\*):(\d+)/);
-          if (!portMatch) continue;
-
-          const port = parseInt(portMatch[2], 10);
-          if (isNaN(port)) continue;
-
-          results.push({ pid, port });
+        if (results.length === 0) {
+          this.logger?.info('[scanProcessesUnix] ss found no OpenCode listeners; trying lsof');
+          scanWithLsof();
+          return;
         }
 
         this.logger?.info(
           `[scanProcessesUnix] Found processes with ports: ${JSON.stringify(results)}`
+        );
+        resolve(results);
+      });
+    });
+  }
+
+  /**
+   * Scan for OpenCode processes using lsof, which is available on macOS when
+   * ss is not installed.
+   */
+  private scanProcessesLsof(): Promise<DiscoveredProcess[]> {
+    return new Promise(resolve => {
+      const lsof = child_process.spawn('lsof', [
+        '-nP',
+        '-a',
+        '-c',
+        'opencode',
+        '-iTCP',
+        '-sTCP:LISTEN',
+      ]);
+      let lsofOut = '';
+
+      lsof.stdout.on('data', data => {
+        lsofOut += data.toString();
+      });
+      lsof.on('error', err => {
+        this.logger?.warn(`[scanProcessesLsof] lsof error: ${err.message}`);
+        resolve([]);
+      });
+      lsof.on('close', () => {
+        const results = parseLsofOutput(lsofOut);
+
+        this.logger?.info(
+          `[scanProcessesLsof] Found processes with ports: ${JSON.stringify(results)}`
         );
         resolve(results);
       });
@@ -551,7 +641,7 @@ export class InstanceManager {
         }
       });
 
-      socket.connect(port, 'localhost');
+      socket.connect(port, '127.0.0.1');
     });
   }
 

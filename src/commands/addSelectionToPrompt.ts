@@ -44,6 +44,11 @@ export async function handleAddSelectionToPrompt(
     outputChannel.debug(`Content: "${ref}"`);
     const result = await openCodeClient.appendPrompt(ref);
     outputChannel.debug(`Result: ${result}`);
+
+    if (!result) {
+      throw new Error('OpenCode did not accept the code reference');
+    }
+
     showTransientNotification(`Sent: ${ref}`);
 
     if (connectionService.getConfigManager().getAutoFocusTerminal()) {

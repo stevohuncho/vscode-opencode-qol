@@ -256,7 +256,10 @@ export async function handlePasteClipboardImage(
       await pruneStoredImages(directory, filenamePrefix);
 
       const relPath = relative(openCodeDirectory, imageUri.fsPath).split(sep).join('/');
-      await client.appendPrompt(`@${relPath}`);
+      const sent = await client.appendPrompt(`@${relPath}`);
+      if (!sent) {
+        throw new Error('OpenCode did not accept the clipboard image reference');
+      }
       outputChannel.info(`[pasteClipboardImage] Added ${relPath} to the prompt`);
       vscode.window.setStatusBarMessage('$(check) Clipboard image added to OpenCode', 3000);
       panel.dispose();
