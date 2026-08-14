@@ -36,24 +36,18 @@ describe('handleToggleMaximizeInstance', () => {
     );
     expect(vscode.commands.executeCommand).toHaveBeenNthCalledWith(
       2,
-      'workbench.action.toggleZenMode'
-    );
-    expect(vscode.commands.executeCommand).toHaveBeenNthCalledWith(
-      3,
       'workbench.action.zenShowEditorTab'
     );
+    expect(vscode.commands.executeCommand).toHaveBeenCalledTimes(2);
 
     vi.clearAllMocks();
     await handleToggleMaximizeInstance(connectionService as never, outputChannel as never);
 
     expect(vscode.commands.executeCommand).toHaveBeenNthCalledWith(
       1,
-      'workbench.action.toggleZenMode'
-    );
-    expect(vscode.commands.executeCommand).toHaveBeenNthCalledWith(
-      2,
       'workbench.action.toggleMaximizeEditorGroup'
     );
+    expect(vscode.commands.executeCommand).toHaveBeenCalledOnce();
   });
 
   it('warns when no OpenCode terminal is available', async () => {
