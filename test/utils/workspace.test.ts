@@ -81,7 +81,7 @@ describe('getWorkspaceHash', () => {
 
 describe('getActiveFileRef', () => {
   beforeEach(() => {
-    vi.mocked(vscode.workspace.asRelativePath).mockReturnValue('src/extension.ts');
+    vi.mocked(vscode.workspace.asRelativePath).mockReturnValue('src\\extension.ts');
     vi.mocked(vscode.workspace.getWorkspaceFolder).mockReturnValue({
       uri: { fsPath: '/workspace' },
     } as vscode.WorkspaceFolder);

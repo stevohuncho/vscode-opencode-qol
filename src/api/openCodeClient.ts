@@ -70,8 +70,12 @@ function isWithinDirectory(filePath: string, directory: string): boolean {
   return relative === '' || (relative !== '..' && !relative.startsWith(`..${path.sep}`));
 }
 
+function normalizeOpenCodePath(filePath: string): string {
+  return filePath.replace(/\\/g, '/');
+}
+
 function formatFileReference(reference: FileReferenceInput): string {
-  const displayPath = reference.displayPath.replace(/^@/, '');
+  const displayPath = normalizeOpenCodePath(reference.displayPath.replace(/^@/, ''));
   const startLine = reference.startLine;
   const endLine = reference.endLine ?? startLine;
   const lineSuffix =
@@ -420,7 +424,7 @@ export class OpenCodeClient {
         url: url.toString(),
         source: {
           type: 'file',
-          path: sourcePath,
+          path: normalizeOpenCodePath(sourcePath),
           text: {
             value: referenceText,
             start: 0,

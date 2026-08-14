@@ -22,33 +22,31 @@ export function isDirectory(filePath: string): boolean {
 
 /**
  * Format an absolute path for sending to OpenCode
- * Uses OS-native path separators (\ on Windows, / on Unix).
+ * Uses OpenCode-compatible POSIX-style path separators.
  * @param fsPath - The absolute file system path
- * @returns Formatted path string with @ prefix and trailing OS-native separator for directories
+ * @returns Formatted path string with @ prefix and trailing slash for directories
  */
 export function formatAbsolutePath(fsPath: string): string {
-  // path.sep is OS-native: \ on Windows, / on Unix
-  const normalizedPath = fsPath.replace(/\\/g, path.sep);
+  const normalizedPath = fsPath.replace(/\\/g, '/');
   let formatted = '@' + normalizedPath;
   if (isDirectory(fsPath)) {
-    formatted += path.sep;
+    formatted += '/';
   }
   return formatted;
 }
 
 /**
  * Format a relative path for sending to OpenCode
- * Uses OS-native path separators (\ on Windows, / on Unix).
+ * Uses OpenCode-compatible POSIX-style path separators.
  * @param relativePath - The relative path
  * @param isDir - Whether the path is a directory
- * @returns Formatted path string with @ prefix and trailing OS-native separator for directories
+ * @returns Formatted path string with @ prefix and trailing slash for directories
  */
 export function formatRelativePath(relativePath: string, isDir: boolean): string {
-  // path.sep is OS-native: \ on Windows, / on Unix
-  const normalizedPath = relativePath.replace(/\\/g, path.sep);
+  const normalizedPath = relativePath.replace(/\\/g, '/');
   let formatted = '@' + normalizedPath;
   if (isDir) {
-    formatted += path.sep;
+    formatted += '/';
   }
   return formatted;
 }

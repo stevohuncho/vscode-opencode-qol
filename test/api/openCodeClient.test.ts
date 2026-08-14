@@ -19,6 +19,7 @@ import { OpenCodeClient, getEventUrl } from '../../src/api/openCodeClient';
 
 import axios from 'axios';
 import axiosRetry from 'axios-retry';
+import { pathToFileURL } from 'url';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
@@ -309,13 +310,17 @@ describe('OpenCodeClient', () => {
         },
       ]);
 
+      const expectedUrl = pathToFileURL('/workspace/src/index.ts');
+      expectedUrl.searchParams.set('start', '10');
+      expectedUrl.searchParams.set('end', '15');
+
       expect(mockHttp.post).toHaveBeenCalledWith('/session/current/message', {
         parts: [
           {
             type: 'file',
             mime: 'text/plain',
             filename: 'index.ts',
-            url: 'file:///workspace/src/index.ts?start=10&end=15',
+            url: expectedUrl.toString(),
             source: {
               type: 'file',
               path: 'src/index.ts',

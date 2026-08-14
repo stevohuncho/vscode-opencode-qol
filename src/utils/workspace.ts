@@ -3,7 +3,6 @@
  * Handles workspace root detection and multi-root workspace support
  */
 import * as crypto from 'crypto';
-import * as path from 'path';
 import * as vscode from 'vscode';
 
 /**
@@ -24,7 +23,7 @@ export interface WorkspaceRootInfo {
 export interface ActiveFileReference {
   /** Absolute file system path. */
   filePath: string;
-  /** Workspace-relative path using the platform's path separator. */
+  /** Workspace-relative path using OpenCode's POSIX-style path separator. */
   relativePath: string;
   /** One-based inclusive starting line, when a selection exists. */
   startLine?: number;
@@ -235,7 +234,7 @@ export const WorkspaceUtils = {
     }
 
     const relativePath = vscode.workspace.asRelativePath(document.uri);
-    const normalizedPath = relativePath.replace(/\//g, path.sep);
+    const normalizedPath = relativePath.replace(/\\/g, '/');
     const reference: ActiveFileReference = {
       filePath: document.uri.fsPath,
       relativePath: normalizedPath,
