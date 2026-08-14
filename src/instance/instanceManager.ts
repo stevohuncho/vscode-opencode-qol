@@ -791,8 +791,8 @@ export class InstanceManager {
 
     if (terminal) {
       this.logger?.info(`[focusTerminal] Found terminal: "${terminal.name}", focusing...`);
-      // Focus the terminal (true = preserveFocus: false, meaning it takes focus)
-      terminal.show(true);
+      // Focus the terminal panel instead of preserving focus in the current editor.
+      terminal.show(false);
       return true;
     }
 

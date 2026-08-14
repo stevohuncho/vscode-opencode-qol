@@ -58,6 +58,10 @@
       {
         "command": "opencodeQol.showGoUsage",
         "title": "OpenCode: Show Go Usage"
+      },
+      {
+        "command": "opencodeQol.toggleFocusTerminal",
+        "title": "OpenCode: Toggle Focus Terminal"
       }
     ],
     "configuration": {

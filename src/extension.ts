@@ -9,6 +9,7 @@ import {
   handleOpenNewInstance,
   handleSelectDefaultInstance,
   handleShowGoUsage,
+  handleToggleFocusTerminal,
   showStatusBarMenu,
 } from './commands';
 import { ConfigManager } from './config';
@@ -164,6 +165,11 @@ export function registerCommands(context: vscode.ExtensionContext): void {
     handleShowGoUsage(connectionService!, outputChannel!)
   );
 
+  const toggleFocusTerminalCommand = vscode.commands.registerCommand(
+    'opencodeQol.toggleFocusTerminal',
+    async () => handleToggleFocusTerminal(connectionService!, outputChannel!)
+  );
+
   context.subscriptions.push(
     statusCommand,
     addFileToPromptCommand,
@@ -171,7 +177,8 @@ export function registerCommands(context: vscode.ExtensionContext): void {
     selectDefaultInstanceCommand,
     addSelectionToPromptCommand,
     openNewInstanceCommand,
-    showGoUsageCommand
+    showGoUsageCommand,
+    toggleFocusTerminalCommand
   );
 }
 

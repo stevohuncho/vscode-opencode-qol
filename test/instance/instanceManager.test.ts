@@ -147,6 +147,21 @@ describe('InstanceManager', () => {
       expect(instanceManager.getTerminalForPort(4096)).toBe(terminal);
     });
   });
+
+  describe('focusTerminal', () => {
+    it('focuses the matching terminal panel', async () => {
+      const show = vi.fn();
+      const terminal = {
+        name: 'OpenCode: test-workspace',
+        show,
+      } as unknown as vscode.Terminal;
+      (vscode.window.terminals as vscode.Terminal[]).push(terminal);
+
+      await expect(instanceManager.focusTerminal()).resolves.toBe(true);
+
+      expect(show).toHaveBeenCalledWith(false);
+    });
+  });
 });
 
 describe('PlatformUtils', () => {
