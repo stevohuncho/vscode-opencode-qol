@@ -1,0 +1,12 @@
+.vscode/**
+.vscode-test/**
+.sisyphus/**
+node_modules/**
+out/**
+dist/**
+temp/**
+nul
+research/**
+.atl/**
+.opencode/**
+graphify-out/**
