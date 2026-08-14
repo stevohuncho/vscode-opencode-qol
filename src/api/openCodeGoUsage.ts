@@ -32,7 +32,10 @@ function getOpenCodeDataDirectory(): string {
  * @returns Absolute path to auth.json
  */
 export function getOpenCodeAuthPath(): string {
-  return path.join(getOpenCodeDataDirectory(), 'opencode', 'auth.json');
+  const dataDirectory = getOpenCodeDataDirectory();
+  return process.env.XDG_DATA_HOME
+    ? path.posix.join(dataDirectory, 'opencode', 'auth.json')
+    : path.join(dataDirectory, 'opencode', 'auth.json');
 }
 
 async function getOpenCodeGoApiKey(): Promise<string> {
