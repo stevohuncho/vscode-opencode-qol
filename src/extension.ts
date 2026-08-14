@@ -3,28 +3,17 @@
  * Provides integration between VS Code and OpenCode AI assistant
  */
 import {
-  handleAddMultipleFiles,
+  handleAddFileToPrompt,
   handleAddSelectionToPrompt,
-  handleAddToPrompt,
   handleCheckInstance,
-  handleExplainAndFix,
-  handleOpenInOpencode,
   handleOpenNewInstance,
-  handlePasteClipboardImage,
   handleSelectDefaultInstance,
-  handleSendDebugContext,
-  handleSendPath,
-  handleSendRelativePath,
-  handleShowWorkspace,
-  handleToggleNotifications,
   showStatusBarMenu,
 } from './commands';
 import { ConfigManager } from './config';
 import { ConnectionService, isRemoteSession } from './connection/connectionService';
 import { DefaultInstanceManager } from './instance/defaultInstanceManager';
 import { InstanceManager } from './instance/instanceManager';
-import { NotificationService } from './notifications/notificationService';
-import { OpenCodeCodeActionProvider } from './providers/codeActionProvider';
 import { StatusBarManager } from './statusBar';
 import { WorkspaceUtils } from './utils/workspace';
 
@@ -34,7 +23,6 @@ let configManager: ConfigManager | undefined;
 let connectionService: ConnectionService | undefined;
 let statusBarManager: StatusBarManager | undefined;
 let outputChannel: vscode.LogOutputChannel | undefined;
-let notificationService: NotificationService | undefined;
 
 export function activate(context: vscode.ExtensionContext): void {
   try {
@@ -61,7 +49,6 @@ export function activate(context: vscode.ExtensionContext): void {
 
     // Initialize connection service
     connectionService = new ConnectionService(configManager, instanceManager, outputChannel);
-    notificationService = new NotificationService(configManager, outputChannel);
 
     // Initialize status bar manager for connection status
     statusBarManager = StatusBarManager.getInstance();
@@ -70,25 +57,15 @@ export function activate(context: vscode.ExtensionContext): void {
     // Subscribe to connection state changes FIRST (before other init that might fail)
     const connectionStateSub = connectionService.onDidChangeConnectionState(event => {
       statusBarManager?.updateConnectionStatus(event.connected, event.port);
-      notificationService?.syncConnection(event.connected ? event.port : undefined);
     });
     context.subscriptions.push(connectionStateSub);
 
     registerCommands(context);
 
-    const codeActionProvider = vscode.languages.registerCodeActionsProvider(
-      '*',
-      new OpenCodeCodeActionProvider(),
-      {
-        providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
-      }
-    );
-    context.subscriptions.push(codeActionProvider);
-
     registerWorkspaceHandlers(context);
 
-    // Discover and connect in background. Connection events are the single
-    // source of truth for the status bar and notification listener.
+    // Discover and connect in the background so the status bar reflects the
+    // current OpenCode instance without blocking activation.
     connectionService.discoverAndConnect().catch(err => {
       outputChannel?.warn(`Background OpenCode discovery failed: ${(err as Error).message}`);
     });
@@ -112,19 +89,15 @@ export function registerCommands(context: vscode.ExtensionContext): void {
     async () => handleCheckInstance(connectionService!)
   );
 
-  const workspaceCommand = vscode.commands.registerCommand(
-    'opencodeConnector.showWorkspace',
-    async () => handleShowWorkspace()
-  );
-
-  const addFileCommand = vscode.commands.registerCommand(
-    'opencodeConnector.addToPrompt',
-    async () => handleAddToPrompt(connectionService!, outputChannel!)
-  );
-
-  const addMultipleFilesCommand = vscode.commands.registerCommand(
-    'opencodeConnector.addMultipleFiles',
-    async () => handleAddMultipleFiles(connectionService!, outputChannel!)
+  const addFileToPromptCommand = vscode.commands.registerCommand(
+    'opencodeConnector.addFileToPrompt',
+    async (...resources: vscode.Uri[]) => {
+      const uris =
+        resources.length > 0 && Array.isArray(resources[resources.length - 1])
+          ? (resources[resources.length - 1] as unknown as vscode.Uri[])
+          : resources;
+      await handleAddFileToPrompt(connectionService!, outputChannel!, uris);
+    }
   );
 
   const statusBarMenuCommand = vscode.commands.registerCommand(
@@ -135,33 +108,6 @@ export function registerCommands(context: vscode.ExtensionContext): void {
   const selectDefaultInstanceCommand = vscode.commands.registerCommand(
     'opencodeConnector.selectDefaultInstance',
     async () => handleSelectDefaultInstance(connectionService!, outputChannel!)
-  );
-
-  const sendDebugContextCommand = vscode.commands.registerCommand(
-    'opencodeConnector.sendDebugContext',
-    async () => handleSendDebugContext(connectionService!, outputChannel!)
-  );
-
-  const sendPathCommand = vscode.commands.registerCommand(
-    'opencodeConnector.sendPath',
-    async (...resources: vscode.Uri[]) => {
-      const uris =
-        resources.length > 0 && Array.isArray(resources[resources.length - 1])
-          ? (resources[resources.length - 1] as unknown as vscode.Uri[])
-          : resources;
-      await handleSendPath(connectionService!, outputChannel!, uris);
-    }
-  );
-
-  const sendRelativePathCommand = vscode.commands.registerCommand(
-    'opencodeConnector.sendRelativePath',
-    async (...resources: vscode.Uri[]) => {
-      const uris =
-        resources.length > 0 && Array.isArray(resources[resources.length - 1])
-          ? (resources[resources.length - 1] as unknown as vscode.Uri[])
-          : resources;
-      await handleSendRelativePath(connectionService!, outputChannel!, uris);
-    }
   );
 
   const instanceManager = InstanceManager.getInstance();
@@ -175,59 +121,13 @@ export function registerCommands(context: vscode.ExtensionContext): void {
     async () => handleOpenNewInstance(connectionService!, instanceManager, outputChannel!)
   );
 
-  const openInOpencodeCommand = vscode.commands.registerCommand(
-    'opencodeConnector.openInOpencode',
-    async (uri: vscode.Uri) => {
-      const target = uri ?? vscode.window.activeTextEditor?.document.uri;
-      if (target) {
-        await handleOpenInOpencode(connectionService!, instanceManager, outputChannel!, target);
-      }
-    }
-  );
-
-  const explainAndFixCommand = vscode.commands.registerCommand(
-    'opencodeConnector.explainAndFix',
-    async (diagnostic: vscode.Diagnostic, uri: vscode.Uri) => {
-      if (!diagnostic || !uri) {
-        outputChannel?.warn(
-          'Explain and Fix requires a diagnostic context. Run it from a code action on an editor diagnostic.'
-        );
-        await vscode.window.showInformationMessage(
-          'Explain and Fix works from a diagnostic quick fix. Place cursor on an issue and run the lightbulb action.'
-        );
-        return;
-      }
-
-      await handleExplainAndFix(connectionService!, outputChannel!, diagnostic, uri);
-    }
-  );
-
-  const toggleNotificationsCommand = vscode.commands.registerCommand(
-    'opencodeConnector.toggleNotifications',
-    async () => handleToggleNotifications(configManager!, outputChannel!)
-  );
-
-  const pasteClipboardImageCommand = vscode.commands.registerCommand(
-    'opencodeConnector.pasteClipboardImage',
-    async () => handlePasteClipboardImage(connectionService!, outputChannel!)
-  );
-
   context.subscriptions.push(
     statusCommand,
-    workspaceCommand,
-    addFileCommand,
-    addMultipleFilesCommand,
+    addFileToPromptCommand,
     statusBarMenuCommand,
     selectDefaultInstanceCommand,
-    sendDebugContextCommand,
-    sendPathCommand,
-    sendRelativePathCommand,
     addSelectionToPromptCommand,
-    openNewInstanceCommand,
-    openInOpencodeCommand,
-    explainAndFixCommand,
-    toggleNotificationsCommand,
-    pasteClipboardImageCommand
+    openNewInstanceCommand
   );
 }
 
@@ -241,20 +141,7 @@ export function registerWorkspaceHandlers(context: vscode.ExtensionContext): voi
     outputChannel?.info('Cleared default instance due to workspace change');
   });
 
-  const configChange = vscode.workspace.onDidChangeConfiguration(event => {
-    if (event.affectsConfiguration('opencode')) {
-      outputChannel?.info('OpenCode configuration changed');
-    }
-
-    // Only reload the notification listener when its own setting changes.
-    // Reloading resets in-flight stream state, so unrelated settings (port,
-    // binaryPath, autoFocusTerminal, ...) must not trigger it.
-    if (event.affectsConfiguration('opencode.notificationsEnabled')) {
-      notificationService?.reloadSettings();
-    }
-  });
-
-  context.subscriptions.push(workspaceFoldersChange, configChange);
+  context.subscriptions.push(workspaceFoldersChange);
 }
 
 export function deactivate(): void {
@@ -266,11 +153,6 @@ export function deactivate(): void {
       client.destroy();
     }
     connectionService = undefined;
-  }
-
-  if (notificationService) {
-    notificationService.dispose();
-    notificationService = undefined;
   }
 
   InstanceManager.resetInstance();

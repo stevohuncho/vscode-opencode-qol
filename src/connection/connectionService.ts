@@ -373,9 +373,9 @@ export class ConnectionService {
 
   /**
    * Attach to an OpenCode instance on a port we already know (for example one
-   * we just spawned or focused via "Open in OpenCode"). Waits for the server to
+   * we just spawned or focused via the editor title-bar command). Waits for the server to
    * accept requests, then promotes it to the active connection and emits the
-   * connected state so dependent services (status bar, notifications) wire up.
+   * connected state so the status bar can reflect the active instance.
    *
    * Unlike ensureConnected(), this never scans processes nor auto-spawns, so it
    * establishes a monitored connection even when process/port discovery is

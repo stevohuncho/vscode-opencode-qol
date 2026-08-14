@@ -41,39 +41,12 @@ export class ConfigManager {
   }
 
   /**
-   * Get the OpenCode-relative directory used for pasted clipboard images.
-   * @returns Relative storage directory (default: '.opencode/clipboard-images')
-   */
-  public getClipboardImageDirectory(): string {
-    const config = vscode.workspace.getConfiguration('opencode');
-    return config.get<string>('clipboardImageDirectory') ?? '.opencode/clipboard-images';
-  }
-
-  /**
-   * Get the filename prefix used for pasted clipboard images.
-   * @returns Filename prefix (default: 'opencode-clipboard-')
-   */
-  public getClipboardImageFilenamePrefix(): string {
-    const config = vscode.workspace.getConfiguration('opencode');
-    return config.get<string>('clipboardImageFilenamePrefix') ?? 'opencode-clipboard-';
-  }
-
-  /**
    * Get auto focus terminal setting.
    * @returns Whether to automatically focus the terminal when spawning OpenCode (default: true)
    */
   public getAutoFocusTerminal(): boolean {
     const config = vscode.workspace.getConfiguration('opencode');
     return config.get<boolean>('autoFocusTerminal') ?? true;
-  }
-
-  /**
-   * Get OpenCode notifications enabled setting.
-   * @returns Whether completion notifications are enabled (default: true)
-   */
-  public getNotificationsEnabled(): boolean {
-    const config = vscode.workspace.getConfiguration('opencode');
-    return config.get<boolean>('notificationsEnabled') ?? true;
   }
 
   /**
@@ -95,57 +68,19 @@ export class ConfigManager {
   }
 
   /**
-   * Set OpenCode notifications enabled setting.
-   * @param enabled - Whether completion notifications should be enabled
-   */
-  public setNotificationsEnabled(enabled: boolean): Thenable<void> {
-    const config = vscode.workspace.getConfiguration('opencode');
-    return config.update('notificationsEnabled', enabled, vscode.ConfigurationTarget.Global);
-  }
-
-  /**
    * Get default configuration values.
    * @returns Object containing default values
    */
   public getDefaults(): {
     port: number;
     binaryPath: string;
-    codeActionSeverityLevels: string[];
     autoFocusTerminal: boolean;
-    notificationsEnabled: boolean;
-    clipboardImageDirectory: string;
-    clipboardImageFilenamePrefix: string;
   } {
     return {
       port: 4096,
       binaryPath: '',
-      codeActionSeverityLevels: ['error', 'warning', 'information', 'hint'],
       autoFocusTerminal: true,
-      notificationsEnabled: true,
-      clipboardImageDirectory: '.opencode/clipboard-images',
-      clipboardImageFilenamePrefix: 'opencode-clipboard-',
     };
-  }
-
-  /**
-   * Get code action severity levels.
-   * @returns Array of severity levels that should trigger the "Explain and Fix" code action
-   */
-  public getCodeActionSeverityLevels(): string[] {
-    const config = vscode.workspace.getConfiguration('opencode');
-    return (
-      config.get<string[]>('codeAction.severityLevels') ??
-      this.getDefaults().codeActionSeverityLevels
-    );
-  }
-
-  /**
-   * Set code action severity levels.
-   * @param levels - Array of severity levels
-   */
-  public setCodeActionSeverityLevels(levels: string[]): Thenable<void> {
-    const config = vscode.workspace.getConfiguration('opencode');
-    return config.update('codeAction.severityLevels', levels, vscode.ConfigurationTarget.Global);
   }
 }
 

@@ -14,13 +14,11 @@ OpenCode is fantastic as a standalone TUI (Terminal User Interface). It's powerf
 
 ![OpenCode Connector extension overview](resources/overview.gif)
 
-![OpenCode Connector Paste clipboard image](resources/paste-image.gif)
-
 ## Why use this extension?
 
 You shouldn't have to choose between a great editor (VS Code) and a great AI agent (OpenCode). This connector gives you the best of both worlds:
 
-1.  **Context Awareness**: When you use commands like "Add to Prompt", the extension sends your active file, selection, and diagnostics to OpenCode.
+1.  **Context Awareness**: Add the current file or a selected code range directly to OpenCode.
     - *No more copy-pasting code blocks.*
     - *No more manually typing file paths.*
 
@@ -29,21 +27,16 @@ You shouldn't have to choose between a great editor (VS Code) and a great AI age
     - *Auto-Spawn*: If no instance is running, it spawns one for you in the integrated terminal.
     - *One command to rule them all.*
 
-3.  **Paste Clipboard Image**: Send clipboard images through SSH and tmux into OpenCode, even in remote sessions.
-
 ## Features
 
 ### Commands
 
 | Command | Description | Keyboard Shortcut |
 |---------|-------------|-------------------|
-   | `OpenCode: Add to Prompt` | Append the current file reference (e.g., `@src/main.ts#10-20`) to the active prompt | `Ctrl+Shift+A` / `Cmd+Shift+A` |
-   | `OpenCode: Add Selection to Prompt` | Append the selected code range (e.g., `@src/main.ts#10-20`) to the active prompt | Right-click in editor |
-| `OpenCode: Select Files to Add` | Open a file picker to select multiple files to add to the prompt | `Ctrl+Shift+Alt+A` / `Cmd+Shift+Alt+A` |
-| `OpenCode: Paste Clipboard Image` | Paste a local clipboard image into a local or remote OpenCode prompt | Command Palette |
-| `OpenCode: Open in OpenCode` | Open an OpenCode instance for the current workspace as an editor tab | Editor title bar / Explorer right-click |
+| `OpenCode: Add File to Prompt` | Add Explorer-selected files using relative paths when the connected instance can resolve them, otherwise absolute paths | Explorer context menu |
+| `OpenCode: Add Selection to Prompt` | Append the selected code range (e.g., `@src/main.ts#10-20`) to the active prompt | Right-click in editor |
+| `OpenCode: Open New Instance` | Open an OpenCode instance for the current workspace as an editor tab | Editor title bar |
 | `OpenCode: Check Instance` | Check if an OpenCode instance is running and connected | — |
-| `OpenCode: Show Workspace` | Display workspace information detected by the extension | — |
 | `OpenCode: Show Menu` | Quick access menu from the status bar | — |
 
 ### Editor Title Button
@@ -63,21 +56,15 @@ Right-click inside any editor to send your selection directly to OpenCode:
 
 ### Explorer Context Menu
 
-Right-click files or folders in the Explorer for two sets of actions:
+Right-click files or folders in the Explorer to add them to the OpenCode prompt:
 
-- **Open in OpenCode**: Launch (or re-attach to) an OpenCode instance for that folder's workspace — opens as an editor tab.
-- **Add to Opencode → Send Path**: Send absolute file/folder paths (e.g., `@/home/user/project/src/file.ts`)
-- **Add to Opencode → Send Relative Path**: Send relative paths (e.g., `@src/file.ts`)
+- **Add File to Prompt**: Uses a path relative to the connected OpenCode instance when available (e.g., `@src/file.ts`), and falls back to an absolute path when necessary.
 
 Multiple files/folders can be selected. Directories include a trailing slash.
 
 ### Workspace-Aware Routing
 
-All send commands automatically route to the **correct OpenCode instance** for the workspace of your active file. In multi-root workspaces each root folder gets its own instance — no manual switching required.
-
-### Code Actions
-
-- **Explain and Fix (OpenCode)**: Click on any diagnostic (error, warning, info) and select this quick fix to send the error details to OpenCode for explanation and automatic fixing.
+File and selection commands automatically route to the **correct OpenCode instance** for the workspace of your active file. In multi-root workspaces each root folder gets its own instance — no manual switching required.
 
 ### Status Bar
 
@@ -89,20 +76,13 @@ All send commands automatically route to the **correct OpenCode instance** for t
 - Runs the OpenCode TUI directly within VS Code's terminal or as an editor tab
 - Auto-focuses the terminal after sending prompts (configurable)
 
-### Clipboard Images
-
-- Clipboard image → ssh → tmux → opencode
-- This wasn't possible before since you can't "paste" clipboard image into a tmuxed ssh session
-
 ## Usage
 
 1.  Open your project in VS Code.
 2.  The extension will find or spawn an OpenCode TUI session for your workspace.
-3.  Click the **⬛ button** in the editor title bar (or right-click a folder → **Open in OpenCode**) to open the TUI as an editor tab.
-4.  Use **`OpenCode: Add to Prompt`** (`Ctrl+Shift+A`) to reference your current file in the TUI.
+3.  Click the **⬛ button** in the editor title bar to open the TUI as an editor tab.
+4.  Right-click a file in Explorer → **Add File to Prompt** to add the file using the best path for the connected instance.
 5.  **Select code** in the editor, right-click → **Add Selection to OpenCode** to send the exact line range without manually submitting the TUI prompt.
-6.  Use **`OpenCode: Select Files to Add`** (`Ctrl+Shift+Alt+A`) to pick multiple files at once.
-7.  Use **`Explain and Fix (OpenCode)`** to quickly fix errors — hover over any error or click the lightbulb.
 
 ## Configuration
 
@@ -112,12 +92,7 @@ You can customize the extension behavior through the following VS Code settings:
 |---------|------|---------|-------------|
 | `opencode.port` | number | `4096` | Port for OpenCode server connection |
 | `opencode.binaryPath` | string | `""` | Absolute path to OpenCode binary (leave empty to use PATH) |
-| `opencode.clipboardImageDirectory` | string | `".opencode/clipboard-images"` | OpenCode-relative directory used for pasted clipboard images |
-| `opencode.clipboardImageFilenamePrefix` | string | `"opencode-clipboard-"` | Filename prefix used for pasted clipboard images |
-| `opencode.codeAction.severityLevels` | array | `["error", "warning", "information", "hint"]` | Diagnostic severity levels that trigger the "Explain and Fix" code action |
 | `opencode.autoFocusTerminal` | boolean | `true` | Automatically focus OpenCode terminal after sending prompts |
-
-The clipboard image directory must remain inside OpenCode's current working directory so its tools can read the files. Add the configured directory to your project's `.gitignore`; the default `.opencode/` path is already ignored by this repository.
 
 ## Requirements
 

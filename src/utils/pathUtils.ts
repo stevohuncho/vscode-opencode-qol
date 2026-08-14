@@ -37,16 +37,6 @@ export function formatAbsolutePath(fsPath: string): string {
 }
 
 /**
- * Format paths for sending to OpenCode
- * @param resources - Array of VS Code URIs
- * @returns Formatted path string with @ prefix and trailing OS-native separator for directories
- */
-export function formatPaths(resources: { fsPath: string }[]): string {
-  const paths = resources.map(uri => formatAbsolutePath(uri.fsPath));
-  return paths.join('\n');
-}
-
-/**
  * Format a relative path for sending to OpenCode
  * Uses OS-native path separators (\ on Windows, / on Unix).
  * @param relativePath - The relative path

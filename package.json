@@ -27,20 +27,12 @@
   "contributes": {
     "commands": [
       {
-        "command": "opencodeConnector.addToPrompt",
-        "title": "OpenCode: Add to Prompt"
-      },
-      {
-        "command": "opencodeConnector.addMultipleFiles",
-        "title": "OpenCode: Select Files to Add"
+        "command": "opencodeConnector.addFileToPrompt",
+        "title": "OpenCode: Add File to Prompt"
       },
       {
         "command": "opencodeConnector.checkInstance",
         "title": "OpenCode: Check Instance"
-      },
-      {
-        "command": "opencodeConnector.showWorkspace",
-        "title": "OpenCode: Show Workspace"
       },
       {
         "command": "opencodeConnector.showStatusBarMenu",
@@ -51,66 +43,13 @@
         "title": "OpenCode: Select Default Instance"
       },
       {
-        "command": "opencodeConnector.sendDebugContext",
-        "title": "OpenCode: Send Debug Context"
-      },
-      {
-        "command": "opencodeConnector.sendPath",
-        "title": "OpenCode: Send Path"
-      },
-      {
-        "command": "opencodeConnector.sendRelativePath",
-        "title": "OpenCode: Send Relative Path"
-      },
-      {
         "command": "opencodeConnector.addSelectionToPrompt",
-        "title": "OpenCode: Add to Opencode"
+        "title": "OpenCode: Add Selection to Prompt"
       },
       {
         "command": "opencodeConnector.openNewInstance",
         "title": "OpenCode: Open New Instance",
         "icon": "$(terminal-tmux)"
-      },
-      {
-        "command": "opencodeConnector.explainAndFix",
-        "title": "Explain and Fix (OpenCode)"
-      },
-      {
-        "command": "opencodeConnector.openInOpencode",
-        "title": "Open in OpenCode",
-        "icon": "$(terminal-tmux)"
-      },
-      {
-        "command": "opencodeConnector.toggleNotifications",
-        "title": "OpenCode: Toggle Notifications"
-      },
-      {
-        "command": "opencodeConnector.pasteClipboardImage",
-        "title": "OpenCode: Paste Clipboard Image",
-        "icon": "$(file-media)"
-      }
-    ],
-    "keybindings": [
-      {
-        "command": "opencodeConnector.addToPrompt",
-        "key": "ctrl+shift+a",
-        "mac": "cmd+shift+a",
-        "when": "editorTextFocus",
-        "title": "Add to OpenCode Prompt"
-      },
-      {
-        "command": "opencodeConnector.addMultipleFiles",
-        "key": "ctrl+shift+alt+a",
-        "mac": "cmd+shift+alt+a",
-        "when": "editorTextFocus",
-        "title": "Add Multiple Files to OpenCode"
-      },
-      {
-        "command": "opencodeConnector.sendDebugContext",
-        "key": "ctrl+shift+d",
-        "mac": "cmd+shift+d",
-        "when": "inDebugMode",
-        "title": "Send Debug Context to OpenCode"
       }
     ],
     "configuration": {
@@ -126,71 +65,18 @@
           "default": "",
           "description": "Path to OpenCode binary"
         },
-        "opencode.clipboardImageDirectory": {
-          "type": "string",
-          "default": ".opencode/clipboard-images",
-          "description": "OpenCode-relative directory for pasted clipboard images. Keep this inside OpenCode's working directory and ignore it in Git."
-        },
-        "opencode.clipboardImageFilenamePrefix": {
-          "type": "string",
-          "default": "opencode-clipboard-",
-          "description": "Filename prefix for pasted clipboard images. Pruning only removes files with this generated prefix and supported image extensions."
-        },
-        "opencode.codeAction.severityLevels": {
-          "type": "array",
-          "default": [
-            "error",
-            "warning",
-            "information",
-            "hint"
-          ],
-          "description": "Diagnostic severity levels that trigger the 'Explain and Fix' code action",
-          "items": {
-            "type": "string",
-            "enum": [
-              "error",
-              "warning",
-              "information",
-              "hint"
-            ]
-          }
-        },
         "opencode.autoFocusTerminal": {
           "type": "boolean",
           "default": true,
           "description": "Automatically focus OpenCode terminal after sending prompts"
-        },
-        "opencode.notificationsEnabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Show VS Code notifications when the active OpenCode runtime returns to idle after work"
         }
       }
     },
-    "submenus": [
-      {
-        "id": "opencodeConnector.addToOpencode",
-        "label": "Add to Opencode"
-      }
-    ],
     "menus": {
       "explorer/context": [
         {
-          "command": "opencodeConnector.openInOpencode",
-          "group": "navigation@10"
-        },
-        {
-          "submenu": "opencodeConnector.addToOpencode"
-        }
-      ],
-      "opencodeConnector.addToOpencode": [
-        {
-          "command": "opencodeConnector.sendPath",
-          "label": "Send Path"
-        },
-        {
-          "command": "opencodeConnector.sendRelativePath",
-          "label": "Send Relative Path"
+          "command": "opencodeConnector.addFileToPrompt",
+          "label": "Add File to Prompt"
         }
       ],
       "editor/context": [

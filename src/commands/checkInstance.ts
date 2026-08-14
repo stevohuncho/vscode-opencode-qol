@@ -12,7 +12,7 @@ export async function handleCheckInstance(connectionService: ConnectionService):
 
   if (!workspacePath) {
     await vscode.window.showWarningMessage(
-      'Open a workspace folder before checking clipboard image support.'
+      'Open a workspace folder before checking OpenCode instance status.'
     );
     return;
   }
@@ -25,7 +25,7 @@ export async function handleCheckInstance(connectionService: ConnectionService):
       const autoSpawnError = connectionService.getLastAutoSpawnError();
       await vscode.window.showErrorMessage(
         autoSpawnError
-          ? `OpenCode is not ready for clipboard images: ${autoSpawnError}`
+          ? `OpenCode instance is not ready: ${autoSpawnError}`
           : 'No OpenCode instance is available for this workspace.'
       );
       return;
@@ -41,11 +41,11 @@ export async function handleCheckInstance(connectionService: ConnectionService):
 
     const port = connectionService.getPort();
     await vscode.window.showInformationMessage(
-      `OpenCode is ready for clipboard images${port ? ` on port ${port}` : ''}.`
+      `OpenCode instance is connected${port ? ` on port ${port}` : ''}.`
     );
   } catch (err) {
     await vscode.window.showErrorMessage(
-      `OpenCode is not ready for clipboard images: ${(err as Error).message}`
+      `OpenCode instance status check failed: ${(err as Error).message}`
     );
   }
 }

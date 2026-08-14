@@ -88,7 +88,7 @@ The project uses `@trivago/prettier-plugin-sort-imports` with this order:
 ```
 src/
 ├── api/           # HTTP clients, API types
-├── commands/      # VS Code command handlers (addToPrompt, sendPath, sendRelativePath, etc.)
+├── commands/      # VS Code command handlers (addFileToPrompt, addSelectionToPrompt, etc.)
 ├── config.ts      # Configuration management
 ├── connection/    # Connection service
 ├── instance/     # Instance management
