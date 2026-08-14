@@ -118,3 +118,24 @@ export interface TuiPublishEvent {
 export interface VcsInfo {
   branch: string;
 }
+
+/** GET /provider response */
+export interface ProviderListResponse {
+  connected: string[];
+}
+
+/** Usage state returned for one OpenCode Go quota window. */
+export interface GoUsageWindow {
+  status: 'ok' | 'rate-limited';
+  percent: number;
+  resetsAt: string;
+}
+
+/** GET https://opencode.ai/zen/go/v1/usage response */
+export interface GoUsageResponse {
+  usage: {
+    rolling: GoUsageWindow;
+    weekly: GoUsageWindow;
+    monthly: GoUsageWindow;
+  };
+}

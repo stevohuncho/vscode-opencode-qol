@@ -10,6 +10,7 @@ import {
   HealthResponse,
   MessageInput,
   PathResponse,
+  ProviderListResponse,
   SessionInfo,
   TuiPublishEvent,
   VcsInfo,
@@ -294,6 +295,25 @@ export class OpenCodeClient {
         '/vcs',
         'Missing or invalid "branch" field in response'
       );
+    }
+
+    return data;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Provider endpoints
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Get the providers connected to this OpenCode instance.
+   * GET /provider
+   */
+  public async getProviders(): Promise<ProviderListResponse> {
+    const response = await this.client.get<ProviderListResponse>('/provider');
+    const data = response.data;
+
+    if (!data || !Array.isArray(data.connected)) {
+      throw new OpenCodeInvalidResponseError('/provider', 'Missing or invalid "connected" field');
     }
 
     return data;

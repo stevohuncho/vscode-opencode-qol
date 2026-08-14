@@ -100,6 +100,20 @@ export class OpenCodeInvalidResponseError extends OpenCodeError {
 }
 
 /**
+ * Error thrown when OpenCode Go usage cannot be retrieved.
+ */
+export class OpenCodeGoUsageError extends OpenCodeError {
+  constructor(
+    message: string,
+    public readonly statusCode?: number,
+    originalError?: Error
+  ) {
+    super(message, 'OPENCODE_GO_USAGE_ERROR', originalError);
+    this.name = 'OpenCodeGoUsageError';
+  }
+}
+
+/**
  * Error thrown when maximum retries have been exhausted.
  */
 export class MaxRetriesExceededError extends OpenCodeError {

@@ -31,6 +31,7 @@ The project source and issue tracker are hosted at [stevohuncho/vscode-opencode-
 | `OpenCode: Check Instance` | Command Palette | Check whether an OpenCode instance is connected to the active workspace. |
 | `OpenCode: Show Menu` | OpenCode status bar item | Open the connection menu. |
 | `OpenCode: Select Default Instance` | Command Palette or status bar menu | Select a running instance for the current workspace for the current VS Code session. |
+| `OpenCode: Show Go Usage` | Command Palette or status bar menu | Show authenticated OpenCode Go rolling, weekly, and monthly quota usage. |
 
 ## Usage
 
@@ -41,6 +42,10 @@ The project source and issue tracker are hosted at [stevohuncho/vscode-opencode-
 5. Review the references in the OpenCode TUI and submit the prompt there.
 
 The extension appends references to the current TUI prompt; it does not submit the prompt automatically.
+
+When the connected instance uses OpenCode Go, **Show Go Usage** reads the OpenCode API key from
+OpenCode's local authentication store and queries the authenticated Go usage endpoint. The command
+requires an active OpenCode Go subscription and does not log or display the API key.
 
 ## OpenCode Connection
 

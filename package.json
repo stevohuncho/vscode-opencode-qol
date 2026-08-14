@@ -54,6 +54,10 @@
         "command": "opencodeQol.openNewInstance",
         "title": "OpenCode: Open New Instance",
         "icon": "$(terminal-tmux)"
+      },
+      {
+        "command": "opencodeQol.showGoUsage",
+        "title": "OpenCode: Show Go Usage"
       }
     ],
     "configuration": {

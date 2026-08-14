@@ -8,6 +8,7 @@ import {
   handleCheckInstance,
   handleOpenNewInstance,
   handleSelectDefaultInstance,
+  handleShowGoUsage,
   showStatusBarMenu,
 } from './commands';
 import { ConfigManager } from './config';
@@ -120,13 +121,18 @@ export function registerCommands(context: vscode.ExtensionContext): void {
     async () => handleOpenNewInstance(connectionService!, instanceManager, outputChannel!)
   );
 
+  const showGoUsageCommand = vscode.commands.registerCommand('opencodeQol.showGoUsage', async () =>
+    handleShowGoUsage(connectionService!, outputChannel!)
+  );
+
   context.subscriptions.push(
     statusCommand,
     addFileToPromptCommand,
     statusBarMenuCommand,
     selectDefaultInstanceCommand,
     addSelectionToPromptCommand,
-    openNewInstanceCommand
+    openNewInstanceCommand,
+    showGoUsageCommand
   );
 }
 

@@ -1,7 +1,9 @@
 import { OpenCodeClient } from '../api/openCodeClient';
+import { getOpenCodeGoUsage } from '../api/openCodeGoUsage';
 import { ConfigManager } from '../config';
 import { DefaultInstanceManager } from '../instance/defaultInstanceManager';
 import { InstanceManager } from '../instance/instanceManager';
+import { GoUsageResponse } from '../types';
 
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -431,6 +433,24 @@ export class ConnectionService {
 
   getConfigManager(): ConfigManager {
     return this.configManager;
+  }
+
+  /**
+   * Retrieve OpenCode Go usage for the connected instance.
+   * @returns Rolling, weekly, and monthly usage windows
+   * @throws Error when disconnected or when the instance is not using OpenCode Go
+   */
+  async getGoUsage(): Promise<GoUsageResponse> {
+    if (!this.client) {
+      throw new Error('OpenCode is not connected');
+    }
+
+    const providers = await this.client.getProviders();
+    if (!providers.connected.includes('opencode-go')) {
+      throw new Error('The connected OpenCode instance is not authenticated with OpenCode Go');
+    }
+
+    return getOpenCodeGoUsage();
   }
 
   async focusTerminal(): Promise<boolean> {
