@@ -1,4 +1,4 @@
-import { handleToggleFocusTerminal } from '../../src/commands/toggleFocusTerminal';
+import { handleToggleMaximizeInstance } from '../../src/commands/toggleMaximizeInstance';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as vscode from 'vscode';
@@ -13,7 +13,7 @@ vi.mock('vscode', () => ({
   },
 }));
 
-describe('handleToggleFocusTerminal', () => {
+describe('handleToggleMaximizeInstance', () => {
   const outputChannel = {
     error: vi.fn(),
   };
@@ -27,7 +27,7 @@ describe('handleToggleFocusTerminal', () => {
       focusTerminal: vi.fn(async () => true),
     };
 
-    await handleToggleFocusTerminal(connectionService as never, outputChannel as never);
+    await handleToggleMaximizeInstance(connectionService as never, outputChannel as never);
 
     expect(connectionService.focusTerminal).toHaveBeenCalledOnce();
     expect(vscode.commands.executeCommand).toHaveBeenNthCalledWith(
@@ -44,7 +44,7 @@ describe('handleToggleFocusTerminal', () => {
     );
 
     vi.clearAllMocks();
-    await handleToggleFocusTerminal(connectionService as never, outputChannel as never);
+    await handleToggleMaximizeInstance(connectionService as never, outputChannel as never);
 
     expect(vscode.commands.executeCommand).toHaveBeenNthCalledWith(
       1,
@@ -61,28 +61,28 @@ describe('handleToggleFocusTerminal', () => {
       focusTerminal: vi.fn(async () => false),
     };
 
-    await handleToggleFocusTerminal(connectionService as never, outputChannel as never);
+    await handleToggleMaximizeInstance(connectionService as never, outputChannel as never);
 
     expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(
-      'No OpenCode terminal is available to focus.'
+      'No OpenCode terminal is available.'
     );
     expect(vscode.commands.executeCommand).not.toHaveBeenCalled();
   });
 
-  it('logs and reports focus errors', async () => {
+  it('logs and reports maximize errors', async () => {
     const connectionService = {
       focusTerminal: vi.fn(async () => {
         throw new Error('terminal unavailable');
       }),
     };
 
-    await handleToggleFocusTerminal(connectionService as never, outputChannel as never);
+    await handleToggleMaximizeInstance(connectionService as never, outputChannel as never);
 
     expect(outputChannel.error).toHaveBeenCalledWith(
-      'OpenCode terminal focus failed: terminal unavailable'
+      'OpenCode terminal maximize failed: terminal unavailable'
     );
     expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
-      'OpenCode terminal focus failed: terminal unavailable'
+      'OpenCode terminal maximize failed: terminal unavailable'
     );
   });
 });

@@ -5,4 +5,5 @@ export { handleSelectDefaultInstance } from './selectDefaultInstance';
 export { handleAddSelectionToPrompt } from './addSelectionToPrompt';
 export { handleOpenNewInstance } from './openNewInstance';
 export { handleShowGoUsage } from './showGoUsage';
-export { handleToggleFocusTerminal } from './toggleFocusTerminal';
+export { handleToggleMaximizeInstance } from './toggleMaximizeInstance';
+export { handleToggleZenInstance } from './toggleZenInstance';

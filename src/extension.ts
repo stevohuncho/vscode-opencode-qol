@@ -9,7 +9,8 @@ import {
   handleOpenNewInstance,
   handleSelectDefaultInstance,
   handleShowGoUsage,
-  handleToggleFocusTerminal,
+  handleToggleMaximizeInstance,
+  handleToggleZenInstance,
   showStatusBarMenu,
 } from './commands';
 import { ConfigManager } from './config';
@@ -165,9 +166,14 @@ export function registerCommands(context: vscode.ExtensionContext): void {
     handleShowGoUsage(connectionService!, outputChannel!)
   );
 
-  const toggleFocusTerminalCommand = vscode.commands.registerCommand(
-    'opencodeQol.toggleFocusTerminal',
-    async () => handleToggleFocusTerminal(connectionService!, outputChannel!)
+  const toggleMaximizeInstanceCommand = vscode.commands.registerCommand(
+    'opencodeQol.toggleMaximizeInstance',
+    async () => handleToggleMaximizeInstance(connectionService!, outputChannel!)
+  );
+
+  const toggleZenInstanceCommand = vscode.commands.registerCommand(
+    'opencodeQol.toggleZenInstance',
+    async () => handleToggleZenInstance(connectionService!, outputChannel!)
   );
 
   context.subscriptions.push(
@@ -178,7 +184,8 @@ export function registerCommands(context: vscode.ExtensionContext): void {
     addSelectionToPromptCommand,
     openNewInstanceCommand,
     showGoUsageCommand,
-    toggleFocusTerminalCommand
+    toggleMaximizeInstanceCommand,
+    toggleZenInstanceCommand
   );
 }
 

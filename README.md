@@ -32,7 +32,8 @@ The project source and issue tracker are hosted at [stevohuncho/vscode-opencode-
 | `OpenCode: Show Menu` | OpenCode status bar item | Open the connection menu. |
 | `OpenCode: Select Default Instance` | Command Palette or status bar menu | Select a running instance for the current workspace for the current VS Code session. |
 | `OpenCode: Show Go Usage` | Command Palette or status bar menu | Show authenticated OpenCode Go rolling, weekly, and monthly quota usage. |
-| `OpenCode: Toggle Focus Terminal` | Command Palette | Focus the existing OpenCode terminal in a maximized, single-tab Zen Mode layout, or restore the previous layout. |
+| `OpenCode: Toggle Maximize Instance` | Command Palette | Focus the existing OpenCode terminal in a maximized, single-tab Zen Mode layout, or restore the previous layout. |
+| `OpenCode: Toggle Zen Instance` | Command Palette | Toggle the focused OpenCode terminal's maximized, single-tab Zen Mode layout. |
 
 ## Usage
 

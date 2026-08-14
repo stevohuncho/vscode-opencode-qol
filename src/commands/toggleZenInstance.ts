@@ -10,14 +10,14 @@ let terminalLayoutActive = false;
  * @param outputChannel - Extension output logger
  * @returns Promise that resolves after the terminal focus attempt completes
  */
-export async function handleToggleFocusTerminal(
+export async function handleToggleZenInstance(
   connectionService: ConnectionService,
   outputChannel: vscode.LogOutputChannel
 ): Promise<void> {
   try {
     const focused = await connectionService.focusTerminal();
     if (!focused) {
-      await vscode.window.showWarningMessage('No OpenCode terminal is available to focus.');
+      await vscode.window.showWarningMessage('No OpenCode terminal is available.');
       return;
     }
 
@@ -32,9 +32,9 @@ export async function handleToggleFocusTerminal(
       terminalLayoutActive = true;
     }
   } catch (err) {
-    outputChannel.error(`OpenCode terminal focus failed: ${(err as Error).message}`);
+    outputChannel.error(`OpenCode terminal Zen Mode failed: ${(err as Error).message}`);
     await vscode.window.showErrorMessage(
-      `OpenCode terminal focus failed: ${(err as Error).message}`
+      `OpenCode terminal Zen Mode failed: ${(err as Error).message}`
     );
   }
 }

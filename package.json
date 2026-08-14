@@ -32,36 +32,40 @@
     "commands": [
       {
         "command": "opencodeQol.addFileToPrompt",
-        "title": "OpenCode: Add File to Prompt"
+        "title": "OpenCode QoL: Add File to Prompt"
       },
       {
         "command": "opencodeQol.checkInstance",
-        "title": "OpenCode: Check Instance"
+        "title": "OpenCode QoL: Check Instance"
       },
       {
         "command": "opencodeQol.showStatusBarMenu",
-        "title": "OpenCode: Show Menu"
+        "title": "OpenCode QoL: Show Menu"
       },
       {
         "command": "opencodeQol.selectDefaultInstance",
-        "title": "OpenCode: Select Default Instance"
+        "title": "OpenCode QoL: Select Default Instance"
       },
       {
         "command": "opencodeQol.addSelectionToPrompt",
-        "title": "OpenCode: Add Selection to Prompt"
+        "title": "OpenCode QoL: Add Selection to Prompt"
       },
       {
         "command": "opencodeQol.openNewInstance",
-        "title": "OpenCode: Open New Instance",
+        "title": "OpenCode QoL: Open New Instance",
         "icon": "$(terminal-tmux)"
       },
       {
         "command": "opencodeQol.showGoUsage",
-        "title": "OpenCode: Show Go Usage"
+        "title": "OpenCode QoL: Show Go Usage"
       },
       {
-        "command": "opencodeQol.toggleFocusTerminal",
-        "title": "OpenCode: Toggle Focus Terminal"
+        "command": "opencodeQol.toggleMaximizeInstance",
+        "title": "OpenCode QoL: Toggle Maximize Instance"
+      },
+      {
+        "command": "opencodeQol.toggleZenInstance",
+        "title": "OpenCode QoL: Toggle Zen Instance"
       }
     ],
     "configuration": {
