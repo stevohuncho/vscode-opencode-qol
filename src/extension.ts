@@ -1,5 +1,5 @@
 /**
- * OpenCode Connector VSCode Extension
+ * OpenCode QoL VS Code Extension
  * Provides integration between VS Code and OpenCode AI assistant
  */
 import {
@@ -26,9 +26,9 @@ let outputChannel: vscode.LogOutputChannel | undefined;
 
 export function activate(context: vscode.ExtensionContext): void {
   try {
-    outputChannel = vscode.window.createOutputChannel('OpenCode Connector', { log: true });
+    outputChannel = vscode.window.createOutputChannel('OpenCode QoL', { log: true });
     context?.subscriptions?.push(outputChannel);
-    outputChannel?.info('OpenCode Connector extension is now active');
+    outputChannel?.info('OpenCode QoL extension is now active');
   } catch (err) {
     console.error('Failed to create output channel:', err);
   }
@@ -71,11 +71,11 @@ export function activate(context: vscode.ExtensionContext): void {
     });
 
     outputChannel?.info(
-      'OpenCode Connector fully initialized' +
+      'OpenCode QoL fully initialized' +
         (isRemoteSession() ? ` [Remote: ${vscode.env.remoteName}]` : ' [Local]')
     );
   } catch (err) {
-    outputChannel?.error(`Failed to initialize OpenCode Connector: ${(err as Error).message}`);
+    outputChannel?.error(`Failed to initialize OpenCode QoL: ${(err as Error).message}`);
   }
 }
 
@@ -84,13 +84,12 @@ export function registerCommands(context: vscode.ExtensionContext): void {
     return;
   }
 
-  const statusCommand = vscode.commands.registerCommand(
-    'opencodeConnector.checkInstance',
-    async () => handleCheckInstance(connectionService!)
+  const statusCommand = vscode.commands.registerCommand('opencodeQol.checkInstance', async () =>
+    handleCheckInstance(connectionService!)
   );
 
   const addFileToPromptCommand = vscode.commands.registerCommand(
-    'opencodeConnector.addFileToPrompt',
+    'opencodeQol.addFileToPrompt',
     async (...resources: vscode.Uri[]) => {
       const uris =
         resources.length > 0 && Array.isArray(resources[resources.length - 1])
@@ -101,23 +100,23 @@ export function registerCommands(context: vscode.ExtensionContext): void {
   );
 
   const statusBarMenuCommand = vscode.commands.registerCommand(
-    'opencodeConnector.showStatusBarMenu',
+    'opencodeQol.showStatusBarMenu',
     async () => showStatusBarMenu(connectionService!, outputChannel!)
   );
 
   const selectDefaultInstanceCommand = vscode.commands.registerCommand(
-    'opencodeConnector.selectDefaultInstance',
+    'opencodeQol.selectDefaultInstance',
     async () => handleSelectDefaultInstance(connectionService!, outputChannel!)
   );
 
   const instanceManager = InstanceManager.getInstance();
   const addSelectionToPromptCommand = vscode.commands.registerCommand(
-    'opencodeConnector.addSelectionToPrompt',
+    'opencodeQol.addSelectionToPrompt',
     async () => handleAddSelectionToPrompt(connectionService!, outputChannel!)
   );
 
   const openNewInstanceCommand = vscode.commands.registerCommand(
-    'opencodeConnector.openNewInstance',
+    'opencodeQol.openNewInstance',
     async () => handleOpenNewInstance(connectionService!, instanceManager, outputChannel!)
   );
 
@@ -145,7 +144,7 @@ export function registerWorkspaceHandlers(context: vscode.ExtensionContext): voi
 }
 
 export function deactivate(): void {
-  outputChannel?.info('OpenCode Connector extension is now deactivated');
+  outputChannel?.info('OpenCode QoL extension is now deactivated');
 
   if (connectionService) {
     const client = connectionService.getClient();

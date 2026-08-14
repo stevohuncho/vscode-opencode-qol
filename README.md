@@ -1,16 +1,14 @@
-# OpenCode Connector
+# OpenCode QoL
 
-[![VS Code Marketplace Version](https://vsmarketplacebadges.dev/version/l3aro.opencode-connector.svg)](https://marketplace.visualstudio.com/items?itemName=l3aro.opencode-connector)
-[![VS Code Marketplace Downloads](https://vsmarketplacebadges.dev/downloads-short/l3aro.opencode-connector.svg)](https://marketplace.visualstudio.com/items?itemName=l3aro.opencode-connector)
-
-[![Open VSX Version](https://img.shields.io/open-vsx/v/l3aro/opencode-connector?style=flat)](https://open-vsx.org/extension/l3aro/opencode-connector)
-[![Open VSX Downloads](https://img.shields.io/open-vsx/dt/l3aro/opencode-connector?style=flat)](https://open-vsx.org/extension/l3aro/opencode-connector)
+[![Repository](https://img.shields.io/badge/repository-GitHub-181717?logo=github)](https://github.com/stevohuncho/vscode-opencode-qol)
 
 **Use OpenCode from inside VS Code without switching context.**
 
-OpenCode is a powerful agentic assistant that can run in its TUI. OpenCode Connector connects that TUI to VS Code so you can send files, folders, and selected code to the correct OpenCode instance from the editor.
+OpenCode is a powerful agentic assistant that can run in its TUI. OpenCode QoL connects that TUI to VS Code so you can send files, folders, and selected code to the correct OpenCode instance from the editor.
 
-![OpenCode Connector extension overview](resources/overview.gif)
+![OpenCode QoL overview](resources/overview.gif)
+
+The project source and issue tracker are hosted at [stevohuncho/vscode-opencode-qol](https://github.com/stevohuncho/vscode-opencode-qol).
 
 ## Features
 
@@ -86,7 +84,7 @@ Package and install the extension locally as a VSIX:
 
 ```bash
 npm run pack
-code --install-extension ./dist/opencode-connector.vsix --force
+code --install-extension ./dist/opencode-qol.vsix --force
 ```
 
 Reload VS Code after installing the local VSIX.

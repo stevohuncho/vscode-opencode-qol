@@ -156,7 +156,7 @@ export class ConnectionService {
           this.setActiveConnection(matchingPort);
 
           this.outputChannel?.info(
-            `OpenCode Connector: auto-connected to instance on port ${matchingPort}`
+            `OpenCode QoL: auto-connected to instance on port ${matchingPort}`
           );
         }
         return true;
@@ -328,9 +328,7 @@ export class ConnectionService {
         }
         this.setActiveConnection(port);
 
-        this.outputChannel?.info(
-          `OpenCode Connector: spawned and connected to instance on port ${port}`
-        );
+        this.outputChannel?.info(`OpenCode QoL: spawned and connected to instance on port ${port}`);
         return true;
       } else {
         this.lastAutoSpawnError = `Spawned OpenCode on port ${port} but it did not become ready within 30s. Check the "OpenCode" terminal for errors.`;
@@ -445,7 +443,7 @@ export class ConnectionService {
   disconnect(): void {
     if (this.client || this.connectedPort !== undefined) {
       this.clearActiveConnection();
-      this.outputChannel?.info('OpenCode Connector: disconnected');
+      this.outputChannel?.info('OpenCode QoL: disconnected');
     }
   }
 

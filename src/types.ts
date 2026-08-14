@@ -1,5 +1,5 @@
 /**
- * Type definitions for OpenCode Connector.
+ * Type definitions for OpenCode QoL.
  */
 
 /** GET /global/health response */

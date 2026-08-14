@@ -46,13 +46,3 @@ jobs:
           files: "*.vsix"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish to VSCode Marketplace
-        run: npx vsce publish -p ${{ secrets.VSCODE_MARKETPLACE_TOKEN }}
-        env:
-          VSCE_TOKEN: ${{ secrets.VSCODE_MARKETPLACE_TOKEN }}
-
-      - name: Publish to Open VSX Registry
-        run: npx ovsx publish -p ${{ secrets.OPENVSX_TOKEN }}
-        env:
-          OVSX_TOKEN: ${{ secrets.OPENVSX_TOKEN }}

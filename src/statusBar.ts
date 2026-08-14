@@ -27,12 +27,12 @@ export class StatusBarManager {
    */
   public initialize(context: vscode.ExtensionContext): void {
     this.statusBarItem = vscode.window.createStatusBarItem(
-      'opencode-connector-status',
+      'opencode-qol-status',
       vscode.StatusBarAlignment.Right,
       100
     );
     this.statusBarItem.name = 'OpenCode Connection Status';
-    this.statusBarItem.command = 'opencodeConnector.showStatusBarMenu';
+    this.statusBarItem.command = 'opencodeQol.showStatusBarMenu';
     this.statusBarItem.tooltip = 'Click to manage OpenCode connection';
 
     // Set initial disconnected state
