@@ -1,0 +1,137 @@
+{
+  "name": "opencode-qol",
+  "displayName": "OpenCode QoL",
+  "description": "Quality-of-life improvements for using OpenCode with VS Code",
+  "author": "stevohuncho",
+  "publisher": "stevohuncho",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stevohuncho/vscode-opencode-qol.git"
+  },
+  "homepage": "https://github.com/stevohuncho/vscode-opencode-qol#readme",
+  "bugs": {
+    "url": "https://github.com/stevohuncho/vscode-opencode-qol/issues"
+  },
+  "icon": "resources/icon.png",
+  "version": "1.3.4",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.94.0",
+    "windsurf": "^1.0.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "extensionKind": [
+    "workspace"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "opencodeQol.addFileToPrompt",
+        "title": "OpenCode: Add File to Prompt"
+      },
+      {
+        "command": "opencodeQol.checkInstance",
+        "title": "OpenCode: Check Instance"
+      },
+      {
+        "command": "opencodeQol.showStatusBarMenu",
+        "title": "OpenCode: Show Menu"
+      },
+      {
+        "command": "opencodeQol.selectDefaultInstance",
+        "title": "OpenCode: Select Default Instance"
+      },
+      {
+        "command": "opencodeQol.addSelectionToPrompt",
+        "title": "OpenCode: Add Selection to Prompt"
+      },
+      {
+        "command": "opencodeQol.openNewInstance",
+        "title": "OpenCode: Open New Instance",
+        "icon": "$(terminal-tmux)"
+      }
+    ],
+    "configuration": {
+      "title": "OpenCode",
+      "properties": {
+        "opencode.port": {
+          "type": "number",
+          "default": 4096,
+          "description": "Port for OpenCode server connection"
+        },
+        "opencode.binaryPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to OpenCode binary"
+        },
+        "opencode.autoFocusTerminal": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically focus OpenCode terminal after sending prompts"
+        }
+      }
+    },
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "opencodeQol.addFileToPrompt",
+          "label": "Add File to Prompt"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "opencodeQol.addSelectionToPrompt",
+          "when": "editorHasSelection",
+          "group": "opencodeQol@1"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "opencodeQol.openNewInstance",
+          "when": "editorIsOpen",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "pretest": "npm run compile",
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "vitest run",
+    "test:integration": "node ./out/test/runTest.js",
+    "lint": "eslint src --ext ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "pack": "node -e \"require('fs').mkdirSync('dist', { recursive: true })\" && vsce package --out ./dist/opencode-qol.vsix"
+  },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.10",
+    "@types/vscode": "^1.94.0",
+    "@vscode/test-electron": "^2.3.0",
+    "esbuild": "^0.17.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "glob": "^13.0.2",
+    "mocha": "^11.7.5",
+    "prettier": "^3.8.1",
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.55.0",
+    "vitest": "^0.30.0",
+    "vsce": "^2.15.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "axios-retry": "^4.0.0"
+  }
+}

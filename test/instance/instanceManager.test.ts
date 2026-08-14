@@ -1,0 +1,295 @@
+/**
+ * Tests for InstanceManager
+ */
+import { ConfigManager } from '../../src/config';
+import {
+  InstanceManager,
+  PlatformUtils,
+  parseLsofOutput,
+  parseSsOutput,
+} from '../../src/instance/instanceManager';
+
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import * as vscode from 'vscode';
+
+vi.mock('vscode', () => ({
+  workspace: {
+    getConfiguration: vi.fn().mockReturnValue({
+      get: vi.fn().mockImplementation((key: string) => {
+        const configs: Record<string, unknown> = {
+          port: 3000,
+          binaryPath: '',
+        };
+        return configs[key] ?? null;
+      }),
+      update: vi.fn().mockResolvedValue(undefined),
+    }),
+  },
+  window: {
+    terminals: [] as unknown[],
+    createTerminal: vi.fn(),
+    onDidCloseTerminal: vi.fn(() => ({ dispose: vi.fn() })),
+  },
+  TerminalLocation: {
+    Editor: 1,
+  },
+}));
+
+// Mock config manager factory
+const createMockConfigManager = (
+  port: number = 3000,
+  binaryPath: string = 'opencode'
+): ConfigManager => {
+  return {
+    getPort: () => port,
+    getBinaryPath: () => binaryPath,
+    setPort: () => Promise.resolve(),
+    setBinaryPath: () => Promise.resolve(),
+    getDefaults: () => ({ port: 3000, binaryPath: '' }),
+  } as unknown as ConfigManager;
+};
+
+describe('InstanceManager', () => {
+  let instanceManager: InstanceManager;
+  let mockConfigManager: ReturnType<typeof createMockConfigManager>;
+
+  beforeEach(() => {
+    InstanceManager.resetInstance();
+    mockConfigManager = createMockConfigManager(3000, 'opencode');
+    instanceManager = InstanceManager.getInstance(mockConfigManager as unknown as ConfigManager);
+    vi.mocked(vscode.window.createTerminal).mockReset();
+    const terminals = vscode.window.terminals as vscode.Terminal[];
+    terminals.splice(0, terminals.length);
+  });
+
+  afterEach(() => {
+    InstanceManager.resetInstance();
+    vi.restoreAllMocks();
+  });
+
+  describe('getInstance', () => {
+    it('should return the same instance when called multiple times', () => {
+      const instance1 = InstanceManager.getInstance(mockConfigManager);
+      const instance2 = InstanceManager.getInstance();
+      expect(instance1).toBe(instance2);
+    });
+
+    it('should create a new instance when config is provided and no instance exists', () => {
+      InstanceManager.resetInstance();
+      const instance = InstanceManager.getInstance(mockConfigManager);
+      expect(instance).toBeDefined();
+      expect(instance).toBeInstanceOf(InstanceManager);
+    });
+  });
+
+  describe('resetInstance', () => {
+    it('should reset the singleton instance', () => {
+      const instance1 = InstanceManager.getInstance(mockConfigManager);
+      InstanceManager.resetInstance();
+      const newMockConfig = createMockConfigManager(3001, 'opencode');
+      const instance2 = InstanceManager.getInstance(newMockConfig);
+      expect(instance1).not.toBe(instance2);
+    });
+
+    it('should allow creating a new instance after reset', () => {
+      const instance1 = InstanceManager.getInstance(mockConfigManager);
+      InstanceManager.resetInstance();
+      const instance2 = InstanceManager.getInstance(mockConfigManager);
+      expect(instance1).not.toBe(instance2);
+    });
+  });
+
+  describe('getBinaryPath', () => {
+    it('should return the configured binary path', () => {
+      const binaryPath = '/custom/path/opencode';
+      InstanceManager.resetInstance();
+      const testConfig = createMockConfigManager(3000, binaryPath);
+      const testManager = InstanceManager.getInstance(testConfig);
+      expect(testManager.getBinaryPath()).toBe(binaryPath);
+    });
+  });
+
+  describe('getPort', () => {
+    it('should return the configured port', () => {
+      const port = 4000;
+      InstanceManager.resetInstance();
+      const testConfig = createMockConfigManager(port, 'opencode');
+      const testManager = InstanceManager.getInstance(testConfig);
+      expect(testManager.getPort()).toBe(port);
+    });
+  });
+
+  describe('attachToTerminal', () => {
+    it('opens an editor terminal with opencode attach instead of starting a duplicate server', async () => {
+      const sendText = vi.fn();
+      const show = vi.fn();
+      const terminal = {
+        name: 'OpenCode: test-workspace',
+        sendText,
+        show,
+      } as unknown as vscode.Terminal;
+      vi.mocked(vscode.window.createTerminal).mockReturnValueOnce(terminal);
+
+      const attachPromise = instanceManager.attachToTerminal(4096, {
+        cwd: '/workspace/app',
+        asEditor: true,
+      });
+      await attachPromise;
+
+      expect(vscode.window.createTerminal).toHaveBeenCalledWith({
+        name: expect.stringMatching(/^OpenCode: /),
+        cwd: '/workspace/app',
+        location: vscode.TerminalLocation.Editor,
+      });
+      expect(show).toHaveBeenCalledWith(false);
+      expect(sendText).toHaveBeenCalledWith('opencode attach http://127.0.0.1:4096');
+      expect(sendText).not.toHaveBeenCalledWith('opencode --port 4096');
+      expect(instanceManager.getTerminalForPort(4096)).toBe(terminal);
+    });
+  });
+});
+
+describe('PlatformUtils', () => {
+  describe('isWindows', () => {
+    it('should correctly detect Windows platform', () => {
+      const originalPlatform = process.platform;
+      Object.defineProperty(process, 'platform', { value: 'win32' });
+      expect(PlatformUtils.isWindows()).toBe(true);
+      Object.defineProperty(process, 'platform', { value: 'linux' });
+      expect(PlatformUtils.isWindows()).toBe(false);
+      Object.defineProperty(process, 'platform', { value: originalPlatform });
+    });
+  });
+
+  describe('getShellPrefix', () => {
+    it('should return cmd /c for Windows', () => {
+      const originalPlatform = process.platform;
+      Object.defineProperty(process, 'platform', { value: 'win32' });
+      const result = PlatformUtils.getShellPrefix();
+      expect(result.command).toBe('cmd');
+      expect(result.args).toEqual(['/c']);
+      Object.defineProperty(process, 'platform', { value: originalPlatform });
+    });
+
+    it('should return sh -c for Unix', () => {
+      const originalPlatform = process.platform;
+      Object.defineProperty(process, 'platform', { value: 'linux' });
+      const result = PlatformUtils.getShellPrefix();
+      expect(result.command).toBe('sh');
+      expect(result.args).toEqual(['-c']);
+      Object.defineProperty(process, 'platform', { value: originalPlatform });
+    });
+  });
+
+  describe('getCommandWithExtension', () => {
+    const originalPlatform = process.platform;
+
+    afterEach(() => {
+      Object.defineProperty(process, 'platform', { value: originalPlatform });
+    });
+
+    it('should add .cmd extension on Windows for regular commands', () => {
+      Object.defineProperty(process, 'platform', { value: 'win32' });
+      expect(PlatformUtils.getCommandWithExtension('opencode')).toBe('opencode.cmd');
+    });
+
+    it('should not modify commands ending with .js on Windows', () => {
+      Object.defineProperty(process, 'platform', { value: 'win32' });
+      expect(PlatformUtils.getCommandWithExtension('script.js')).toBe('script.js');
+    });
+
+    it('should not modify commands ending with .exe on Windows', () => {
+      Object.defineProperty(process, 'platform', { value: 'win32' });
+      expect(PlatformUtils.getCommandWithExtension('program.exe')).toBe('program.exe');
+    });
+
+    it('should not add extension on non-Windows platforms', () => {
+      Object.defineProperty(process, 'platform', { value: 'linux' });
+      expect(PlatformUtils.getCommandWithExtension('opencode')).toBe('opencode');
+    });
+  });
+});
+
+describe('Unix process output parsing', () => {
+  it('parses OpenCode listeners from Linux ss output', () => {
+    const output = [
+      'State Recv-Q Send-Q Local Address:Port Peer Address:Port Process',
+      'LISTEN 0 128 127.0.0.1:4096 0.0.0.0:* users:(("opencode",pid=1234,fd=7))',
+      'LISTEN 0 128 127.0.0.1:4097 0.0.0.0:* users:(("opencode-helper",pid=1235,fd=7))',
+    ].join('\n');
+
+    expect(parseSsOutput(output)).toEqual([{ pid: 1234, port: 4096 }]);
+  });
+
+  it('parses IPv6 and wildcard listeners from ss output', () => {
+    const output = [
+      'LISTEN 0 128 [::]:4096 [::]:* users:(("opencode",pid=1234,fd=7))',
+      'LISTEN 0 128 *:4097 *:* users:(("opencode",pid=1235,fd=7))',
+    ].join('\n');
+
+    expect(parseSsOutput(output)).toEqual([
+      { pid: 1234, port: 4096 },
+      { pid: 1235, port: 4097 },
+    ]);
+  });
+
+  it('parses OpenCode listeners from macOS lsof output', () => {
+    const output = [
+      'COMMAND   PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME',
+      'opencode 1234 steve  7u  IPv4 123456      0t0  TCP 127.0.0.1:4096 (LISTEN)',
+      'opencode-helper 1235 steve  7u  IPv4 123457 0t0 TCP 127.0.0.1:4097 (LISTEN)',
+    ].join('\n');
+
+    expect(parseLsofOutput(output)).toEqual([{ pid: 1234, port: 4096 }]);
+  });
+});
+
+describe('InstanceManager Integration Tests', () => {
+  beforeEach(() => {
+    InstanceManager.resetInstance();
+    vi.restoreAllMocks();
+  });
+
+  afterEach(() => {
+    InstanceManager.resetInstance();
+    vi.restoreAllMocks();
+  });
+
+  describe('singleton behavior', () => {
+    it('should maintain state across method calls', () => {
+      const config = createMockConfigManager(5000, 'test-binary');
+      const manager1 = InstanceManager.getInstance(config);
+      const config2 = createMockConfigManager(6000, 'test-binary-2');
+      const manager2 = InstanceManager.getInstance(config2);
+      expect(manager1).toBe(manager2);
+      expect(manager1.getPort()).toBe(5000);
+    });
+
+    it('should allow proper reset and recreation', () => {
+      const config1 = createMockConfigManager(7000, 'binary1');
+      const manager1 = InstanceManager.getInstance(config1);
+      InstanceManager.resetInstance();
+      const config2 = createMockConfigManager(8000, 'binary2');
+      const manager2 = InstanceManager.getInstance(config2);
+      expect(manager1).not.toBe(manager2);
+      expect(manager2.getPort()).toBe(8000);
+      expect(manager2.getBinaryPath()).toBe('binary2');
+    });
+
+    it('should properly isolate test state with reset', () => {
+      {
+        const config = createMockConfigManager(9000, 'first-binary');
+        const manager = InstanceManager.getInstance(config);
+        expect(manager.getPort()).toBe(9000);
+        InstanceManager.resetInstance();
+      }
+      {
+        InstanceManager.resetInstance();
+        const config = createMockConfigManager(10000, 'second-binary');
+        const manager = InstanceManager.getInstance(config);
+        expect(manager.getPort()).toBe(10000);
+        expect(manager.getBinaryPath()).toBe('second-binary');
+      }
+    });
+  });
+});
