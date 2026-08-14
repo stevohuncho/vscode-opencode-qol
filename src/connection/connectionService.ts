@@ -319,7 +319,9 @@ export class ConnectionService {
     this.lastAutoSpawnError = undefined;
     try {
       const port = await this.instanceManager.findAvailablePort();
-      await this.instanceManager.spawnInTerminal(port);
+      // Keep auto-spawned instances in the editor area so later prompt additions
+      // can reveal and focus the existing terminal editor in its current group.
+      await this.instanceManager.spawnInTerminal(port, { asEditor: true });
       const serverReady = await this.waitForServer(port);
 
       if (serverReady) {

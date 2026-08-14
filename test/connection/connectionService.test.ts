@@ -173,6 +173,24 @@ describe('ConnectionService', () => {
     expect(service.getPort()).toBe(4100);
   });
 
+  it('auto-spawns OpenCode as an editor terminal', async () => {
+    mockState.clientBehaviors.set(5001, {
+      getPath: { directory: '/workspace/app' },
+    });
+
+    const service = new ConnectionService(
+      configManager as never,
+      instanceManager as never,
+      outputChannel
+    );
+    vi.spyOn(service, 'discoverAndConnect').mockResolvedValue(false);
+    vi.spyOn(service, 'waitForServer').mockResolvedValue(true);
+
+    await service.ensureConnected();
+
+    expect(instanceManager.spawnInTerminal).toHaveBeenCalledWith(5001, { asEditor: true });
+  });
+
   it('checks known fallback ports when process discovery returns no metadata', async () => {
     mockState.clientBehaviors.set(4096, {
       getPath: { directory: '/workspace/app' },

@@ -50,7 +50,7 @@ requires an active OpenCode Go subscription and does not log or display the API 
 
 ## OpenCode Connection
 
-The extension connects to OpenCode over its local server API. It first looks for an existing OpenCode process serving the target workspace. If none is found, it starts OpenCode with `--port` in the VS Code integrated terminal and waits for the server to become ready.
+The extension connects to OpenCode over its local server API. It first looks for an existing OpenCode process serving the target workspace. If none is found, it starts OpenCode with `--port` in a VS Code editor terminal and waits for the server to become ready.
 
 To start an instance manually, run this from the project directory:
 

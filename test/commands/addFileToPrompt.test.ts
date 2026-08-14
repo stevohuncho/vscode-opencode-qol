@@ -77,4 +77,19 @@ describe('handleAddFileToPrompt', () => {
       },
     ]);
   });
+
+  it('focuses the OpenCode terminal after adding files when enabled', async () => {
+    const { connectionService, outputChannel } = createDependencies();
+    connectionService.getConfigManager = vi.fn(() => ({
+      getAutoFocusTerminal: vi.fn(() => true),
+    }));
+
+    await handleAddFileToPrompt(
+      connectionService as never,
+      outputChannel as never,
+      [{ fsPath: '/workspace/src/index.ts' }] as never
+    );
+
+    expect(connectionService.focusTerminal).toHaveBeenCalledOnce();
+  });
 });
