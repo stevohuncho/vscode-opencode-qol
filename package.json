@@ -120,13 +120,18 @@
     "format:check": "prettier --check .",
     "pack": "node -e \"require('fs').mkdirSync('dist', { recursive: true })\" && vsce package --out ./dist/opencode-qol.vsix"
   },
+  "overrides": {
+    "diff": "^8.0.3",
+    "serialize-javascript": "^7.0.5"
+  },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/glob": "^8.1.0",
     "@types/mocha": "^10.0.10",
     "@types/vscode": "^1.94.0",
-    "@vscode/test-electron": "^2.3.0",
-    "esbuild": "^0.17.0",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^3.9.2",
+    "esbuild": "^0.28.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
     "glob": "^13.0.2",
@@ -134,11 +139,10 @@
     "prettier": "^3.8.1",
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.55.0",
-    "vitest": "^0.30.0",
-    "vsce": "^2.15.0"
+    "vitest": "^4.1.10"
   },
   "dependencies": {
-    "axios": "^1.6.0",
+    "axios": "^1.19.0",
     "axios-retry": "^4.0.0"
   }
 }

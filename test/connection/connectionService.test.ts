@@ -50,20 +50,22 @@ vi.mock('vscode', () => {
     env: {
       remoteName: undefined,
     },
-    EventEmitter: vi.fn(() => ({
-      event: (listener: (event: ConnectionEvent) => void) => {
-        state.listeners.add(listener);
-        return {
-          dispose: () => state.listeners.delete(listener),
-        };
-      },
-      fire: (event: ConnectionEvent) => {
-        for (const listener of state.listeners) {
-          listener(event);
-        }
-      },
-      dispose: vi.fn(),
-    })),
+    EventEmitter: vi.fn(function () {
+      return {
+        event: (listener: (event: ConnectionEvent) => void) => {
+          state.listeners.add(listener);
+          return {
+            dispose: () => state.listeners.delete(listener),
+          };
+        },
+        fire: (event: ConnectionEvent) => {
+          for (const listener of state.listeners) {
+            listener(event);
+          }
+        },
+        dispose: vi.fn(),
+      };
+    }),
   };
 });
 

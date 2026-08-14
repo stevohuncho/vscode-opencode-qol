@@ -15,7 +15,9 @@ const mockSocket = {
 
 vi.mock('net', () => {
   return {
-    Socket: vi.fn(() => mockSocket),
+    Socket: vi.fn(function () {
+      return mockSocket;
+    }),
   };
 });
 
