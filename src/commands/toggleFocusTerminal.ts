@@ -26,7 +26,7 @@ export async function handleToggleFocusTerminal(
       await vscode.commands.executeCommand('workbench.action.toggleMaximizeEditorGroup');
       terminalLayoutActive = false;
     } else {
-      await vscode.commands.executeCommand('workbench.action.maximizeEditorHideSidebar');
+      await vscode.commands.executeCommand('workbench.action.toggleMaximizeEditorGroup');
       await vscode.commands.executeCommand('workbench.action.toggleZenMode');
       await vscode.commands.executeCommand('workbench.action.zenShowEditorTab');
       terminalLayoutActive = true;

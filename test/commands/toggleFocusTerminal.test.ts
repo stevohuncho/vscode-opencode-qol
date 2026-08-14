@@ -32,7 +32,7 @@ describe('handleToggleFocusTerminal', () => {
     expect(connectionService.focusTerminal).toHaveBeenCalledOnce();
     expect(vscode.commands.executeCommand).toHaveBeenNthCalledWith(
       1,
-      'workbench.action.maximizeEditorHideSidebar'
+      'workbench.action.toggleMaximizeEditorGroup'
     );
     expect(vscode.commands.executeCommand).toHaveBeenNthCalledWith(
       2,
