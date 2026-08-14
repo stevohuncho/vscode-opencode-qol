@@ -24,6 +24,27 @@ let configManager: ConfigManager | undefined;
 let connectionService: ConnectionService | undefined;
 let statusBarManager: StatusBarManager | undefined;
 let outputChannel: vscode.LogOutputChannel | undefined;
+let usageRefreshTimer: ReturnType<typeof setInterval> | undefined;
+let usageRequestId = 0;
+
+const USAGE_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+
+async function refreshGoUsage(): Promise<void> {
+  const service = connectionService;
+  if (!service?.isConnected()) {
+    return;
+  }
+
+  const requestId = ++usageRequestId;
+  try {
+    const usage = await service.getGoUsage();
+    if (requestId === usageRequestId && service === connectionService && service.isConnected()) {
+      statusBarManager?.updateGoUsage(usage);
+    }
+  } catch (err) {
+    outputChannel?.debug(`OpenCode Go usage unavailable: ${(err as Error).message}`);
+  }
+}
 
 export function activate(context: vscode.ExtensionContext): void {
   try {
@@ -58,8 +79,26 @@ export function activate(context: vscode.ExtensionContext): void {
     // Subscribe to connection state changes FIRST (before other init that might fail)
     const connectionStateSub = connectionService.onDidChangeConnectionState(event => {
       statusBarManager?.updateConnectionStatus(event.connected, event.port);
+      usageRequestId++;
+      statusBarManager?.updateGoUsage(undefined);
+
+      if (event.connected) {
+        void refreshGoUsage();
+      }
     });
     context.subscriptions.push(connectionStateSub);
+
+    usageRefreshTimer = setInterval(() => {
+      void refreshGoUsage();
+    }, USAGE_REFRESH_INTERVAL_MS);
+    context.subscriptions.push({
+      dispose: () => {
+        if (usageRefreshTimer) {
+          clearInterval(usageRefreshTimer);
+          usageRefreshTimer = undefined;
+        }
+      },
+    });
 
     registerCommands(context);
 
@@ -151,6 +190,12 @@ export function registerWorkspaceHandlers(context: vscode.ExtensionContext): voi
 
 export function deactivate(): void {
   outputChannel?.info('OpenCode QoL extension is now deactivated');
+  usageRequestId++;
+
+  if (usageRefreshTimer) {
+    clearInterval(usageRefreshTimer);
+    usageRefreshTimer = undefined;
+  }
 
   if (connectionService) {
     const client = connectionService.getClient();
