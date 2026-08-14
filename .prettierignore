@@ -4,5 +4,5 @@ coverage/
 *.md
 *.yml
 *.yaml
-.esbuild.js
+esbuild.js
 vitest.config.ts

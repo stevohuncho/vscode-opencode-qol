@@ -92,7 +92,6 @@ src/
 ├── config.ts      # Configuration management
 ├── connection/    # Connection service
 ├── instance/     # Instance management
-├── providers/    # VS Code providers (CodeAction)
 ├── statusBar.ts  # Status bar management
 ├── types.ts      # Shared types
 └── utils/        # Utility functions
