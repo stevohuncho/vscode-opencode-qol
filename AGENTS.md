@@ -14,9 +14,17 @@ This is a VS Code extension that integrates OpenCode AI assistant with VS Code. 
 
 | Command | Description |
 |---------|-------------|
-| `npm run compile` | Compile TypeScript to JavaScript |
-| `npm run watch` | Watch mode - recompile on file changes |
-| `npm run pack` | Package extension as .vsix file |
+| `npm install` | Install dependencies |
+| `npm run compile` | Bundle the extension and integration-test runner with esbuild into `out/` |
+| `npm run watch` | Watch and rebuild the extension and integration-test runner |
+| `npm run pack` | Create `dist/opencode-qol.vsix` |
+
+The repository also provides a lowercase `justfile`:
+
+| Command | Description |
+|---------|-------------|
+| `just install` | Package the extension and install `dist/opencode-qol.vsix` into VS Code using the `code` CLI |
+| `just precommit` | Run linting, formatting checks, unit tests, and compilation |
 
 ### Testing
 
@@ -24,16 +32,16 @@ This is a VS Code extension that integrates OpenCode AI assistant with VS Code. 
 |---------|-------------|
 | `npm run test` | Run all tests (unit + integration) |
 | `npm run test:unit` | Run unit tests only (vitest) |
-| `npm run test:integration` | Run integration tests only |
+| `npm run test:integration` | Run the compiled VS Code integration-test runner |
 
 **Running a single test file:**
 ```bash
-# Using vitest directly for unit tests
 npx vitest run test/utils/debounce.test.ts
-
-# Or run with pattern matching
-npx vitest run --filter "debounce"
 ```
+
+`npm run test` runs `npm run test:unit` followed by `npm run test:integration`. The
+`pretest` script compiles the project before `npm run test` runs. Run
+`npm run compile` first when invoking `npm run test:integration` directly.
 
 ### Linting & Formatting
 
@@ -49,10 +57,12 @@ npx vitest run --filter "debounce"
 
 ### TypeScript Configuration
 
-- **Strict mode**: Enabled - no implicit any, no implicit returns
-- **Module system**: CommonJS
-- **Target**: ES2020
-- **Unused variables**: Not allowed (`noUnusedLocals`, `noUnusedParameters`)
+- **Strict mode**: Enabled
+- **Module setting**: ESNext, bundled by esbuild
+- **TypeScript target**: ES2020
+- **Build target**: Node 16
+- **Unused variables and parameters**: Not allowed (`noUnusedLocals`, `noUnusedParameters`)
+- **Module resolution**: `bundler`
 
 ### Formatting (Prettier)
 
@@ -87,14 +97,25 @@ The project uses `@trivago/prettier-plugin-sort-imports` with this order:
 
 ```
 src/
-├── api/           # HTTP clients, API types
-├── commands/      # VS Code command handlers (addFileToPrompt, addSelectionToPrompt, etc.)
-├── config.ts      # Configuration management
-├── connection/    # Connection service
-├── instance/     # Instance management
-├── statusBar.ts  # Status bar management
-├── types.ts      # Shared types
-└── utils/        # Utility functions
+├── api/           # OpenCode HTTP client and API errors
+├── commands/      # VS Code command handlers and command registration
+├── connection/    # Workspace-aware connection service
+├── instance/      # Instance discovery, management, and defaults
+├── utils/         # Debouncing, path, and workspace utilities
+├── config.ts      # VS Code configuration access
+├── extension.ts   # Extension activation and lifecycle
+├── statusBar.ts   # Connection status-bar item
+└── types.ts       # Shared types
+
+test/
+├── api/           # OpenCode client tests
+├── commands/      # Command-handler tests
+├── connection/    # Connection-service tests
+├── extension/     # Extension-related tests
+├── instance/      # Instance-management tests
+├── utils/         # Utility tests
+├── runTest.ts     # VS Code integration-test launcher
+└── suite/         # Mocha integration-test suite
 ```
 
 ### JSDoc Comments
@@ -137,25 +158,24 @@ try {
 - Return early with user messages for validation failures
 - Use `async/await` for all VS Code APIs
 
-#### Context Menu Commands
+#### Extension Manifest Commands and Menus
 
-When adding explorer context menu commands:
+When adding a command or menu contribution:
 - Define commands in `contributes.commands`
-- Define submenus in `contributes.submenus` (array of `{id, label}`)
-- Add submenu trigger to `contributes.menus["explorer/context"]`
-- Add submenu items to `contributes.menus["submenuId"]` (NOT `explorer/context/submenuId`)
+- Add menu entries to the appropriate `contributes.menus` location
+- Keep the command identifier in `package.json` and the registered command in sync
 
-Example:
+The current extension uses these menu locations:
 ```json
-"submenus": [
-  { "id": "myExtension.submenu", "label": "My Submenu" }
-],
 "menus": {
   "explorer/context": [
-    { "submenu": "myExtension.submenu" }
+    { "command": "opencodeQol.addFileToPrompt" }
   ],
-  "myExtension.submenu": [
-    { "command": "myExtension.command", "label": "Do Something" }
+  "editor/context": [
+    { "command": "opencodeQol.addSelectionToPrompt" }
+  ],
+  "editor/title": [
+    { "command": "opencodeQol.openNewInstance" }
   ]
 }
 ```
@@ -169,10 +189,11 @@ Example:
 
 ### Testing Patterns
 
-- Unit tests use Vitest with `describe`, `it`, `expect`
-- Integration tests use VS Code test runner (`@vscode/test-electron`)
-- Test files co-located in `test/` directory matching `src/` structure
-- Mock VS Code APIs where needed
+- Unit tests use Vitest with `describe`, `it`, `expect`, and inline `vi.mock('vscode', ...)` factories where needed.
+- Unit tests are discovered from `test/**/*.test.ts` by `vitest.config.ts`.
+- Integration tests use Mocha through `@vscode/test-electron`.
+- The integration suite scans compiled files under `out/test` for `**/*.test.ts`.
+- Keep unit tests under the matching subdirectory in `test/` rather than alongside source files.
 
 ---
 
@@ -180,8 +201,6 @@ Example:
 
 Before submitting any changes:
 
-1. [ ] Run `npm run lint` - fix any ESLint errors
-2. [ ] Run `npm run format` - ensure consistent formatting
-3. [ ] Run `npm run test:unit` - unit tests pass
-4. [ ] Run `npm run compile` - TypeScript compiles without errors
-5. [ ] Check for any `// TODO:` comments that should be addressed
+1. [ ] Run `just precommit` (or run its four commands individually)
+2. [ ] Run `npm run pack` when packaging or validating the VSIX
+3. [ ] Check for any `// TODO:` comments that should be addressed
