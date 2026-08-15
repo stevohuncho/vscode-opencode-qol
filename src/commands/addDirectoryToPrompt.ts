@@ -4,17 +4,15 @@ import { handleAddResourcesToPrompt } from './addResourcesToPrompt';
 import * as vscode from 'vscode';
 
 /**
- * Add Explorer-selected files to the active OpenCode prompt.
- * Uses a path relative to the connected instance when possible and falls back
- * to an absolute path when the instance cannot resolve the relative path.
+ * Add an Explorer-selected directory to the active OpenCode prompt.
  * @param connectionService - Active OpenCode connection service
  * @param outputChannel - User-visible log channel
- * @param resources - Explorer-selected files or directories
+ * @param resources - Explorer-selected directories
  */
-export async function handleAddFileToPrompt(
+export async function handleAddDirectoryToPrompt(
   connectionService: ConnectionService,
   outputChannel: vscode.LogOutputChannel,
   resources: vscode.Uri[]
 ): Promise<void> {
-  await handleAddResourcesToPrompt(connectionService, outputChannel, resources, false, 'file');
+  await handleAddResourcesToPrompt(connectionService, outputChannel, resources, true, 'directory');
 }

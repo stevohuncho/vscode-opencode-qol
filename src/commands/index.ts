@@ -1,5 +1,6 @@
 export { handleCheckInstance } from './checkInstance';
 export { handleAddFileToPrompt } from './addFileToPrompt';
+export { handleAddDirectoryToPrompt } from './addDirectoryToPrompt';
 export { showStatusBarMenu } from './showStatusBarMenu';
 export { handleSelectDefaultInstance } from './selectDefaultInstance';
 export { handleAddSelectionToPrompt } from './addSelectionToPrompt';

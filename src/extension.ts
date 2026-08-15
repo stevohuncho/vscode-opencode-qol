@@ -3,6 +3,7 @@
  * Provides integration between VS Code and OpenCode AI assistant
  */
 import {
+  handleAddDirectoryToPrompt,
   handleAddFileToPrompt,
   handleAddSelectionToPrompt,
   handleCheckInstance,
@@ -141,6 +142,17 @@ export function registerCommands(context: vscode.ExtensionContext): void {
     }
   );
 
+  const addDirectoryToPromptCommand = vscode.commands.registerCommand(
+    'opencodeQol.addDirectoryToPrompt',
+    async (...resources: vscode.Uri[]) => {
+      const uris =
+        resources.length > 0 && Array.isArray(resources[resources.length - 1])
+          ? (resources[resources.length - 1] as unknown as vscode.Uri[])
+          : resources;
+      await handleAddDirectoryToPrompt(connectionService!, outputChannel!, uris);
+    }
+  );
+
   const statusBarMenuCommand = vscode.commands.registerCommand(
     'opencodeQol.showStatusBarMenu',
     async () => showStatusBarMenu(connectionService!, outputChannel!)
@@ -179,6 +191,7 @@ export function registerCommands(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     statusCommand,
     addFileToPromptCommand,
+    addDirectoryToPromptCommand,
     statusBarMenuCommand,
     selectDefaultInstanceCommand,
     addSelectionToPromptCommand,

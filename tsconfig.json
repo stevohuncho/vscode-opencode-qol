@@ -17,7 +17,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "types": ["node"]
   },
   "include": ["src/**/*", "test/**/*.ts"],
   "exclude": ["node_modules", "out", "**/*.test.ts"]

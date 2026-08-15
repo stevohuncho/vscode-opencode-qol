@@ -35,6 +35,10 @@
         "title": "OpenCode QoL: Add File to Prompt"
       },
       {
+        "command": "opencodeQol.addDirectoryToPrompt",
+        "title": "OpenCode QoL: Add Directory to Prompt"
+      },
+      {
         "command": "opencodeQol.checkInstance",
         "title": "OpenCode QoL: Check Instance"
       },
@@ -92,7 +96,13 @@
       "explorer/context": [
         {
           "command": "opencodeQol.addFileToPrompt",
+          "when": "!explorerResourceIsFolder",
           "label": "Add File to Prompt"
+        },
+        {
+          "command": "opencodeQol.addDirectoryToPrompt",
+          "when": "explorerResourceIsFolder",
+          "label": "Add Directory to Prompt"
         }
       ],
       "editor/context": [
@@ -132,6 +142,7 @@
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/glob": "^8.1.0",
     "@types/mocha": "^10.0.10",
+    "@types/node": "^26.2.0",
     "@types/vscode": "^1.94.0",
     "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^3.9.2",
