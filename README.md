@@ -20,6 +20,7 @@ The project source and issue tracker are hosted at [stevohuncho/vscode-opencode-
 - **Instance selection**: View available instances for the current workspace and choose a session-only default instance.
 - **Connection status**: The status bar shows whether OpenCode is connected and displays the active port.
 - **Automatic terminal focus**: Optionally focus the OpenCode terminal after adding a file or selection.
+- **Editor mode indicators**: Maximize and Zen Mode are mutually exclusive, and the active mode is shown beside the OpenCode connection status.
 
 ## Commands
 
@@ -32,8 +33,8 @@ The project source and issue tracker are hosted at [stevohuncho/vscode-opencode-
 | `OpenCode: Show Menu` | OpenCode status bar item | Open the connection menu. |
 | `OpenCode: Select Default Instance` | Command Palette or status bar menu | Select a running instance for the current workspace for the current VS Code session. |
 | `OpenCode: Show Go Usage` | Command Palette or status bar menu | Show authenticated OpenCode Go rolling, weekly, and monthly quota usage. |
-| `OpenCode: Toggle Maximize Instance` | Command Palette | Focus the existing OpenCode terminal in a maximized, single-tab Zen Mode layout, or restore the previous layout. |
-| `OpenCode: Toggle Zen Instance` | Command Palette | Toggle the focused OpenCode terminal's maximized, single-tab Zen Mode layout. |
+| `OpenCode: Toggle Maximize Instance` | Command Palette | Focus the existing OpenCode terminal in a maximized, single-tab layout, or restore the previous editor-group proportions. Disables Zen Mode first when necessary. |
+| `OpenCode: Toggle Zen Instance` | Command Palette | Toggle the focused OpenCode terminal's maximized, single-tab Zen Mode layout and restore the previous editor-group proportions when leaving it. Disables maximize first when necessary. |
 
 ## Usage
 

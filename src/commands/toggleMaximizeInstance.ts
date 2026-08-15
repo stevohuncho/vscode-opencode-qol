@@ -1,8 +1,8 @@
 import { ConnectionService } from '../connection/connectionService';
+import { captureEditorLayout } from './editorLayout';
+import { activateEditorMode, deactivateActiveEditorMode, getActiveEditorMode } from './editorMode';
 
 import * as vscode from 'vscode';
-
-let terminalLayoutActive = false;
 
 /**
  * Toggle the focused OpenCode terminal's maximized, single-tab Zen Mode layout.
@@ -21,14 +21,21 @@ export async function handleToggleMaximizeInstance(
       return;
     }
 
-    if (terminalLayoutActive) {
-      await vscode.commands.executeCommand('workbench.action.toggleMaximizeEditorGroup');
-      terminalLayoutActive = false;
-    } else {
-      await vscode.commands.executeCommand('workbench.action.toggleMaximizeEditorGroup');
-      await vscode.commands.executeCommand('workbench.action.zenShowEditorTab');
-      terminalLayoutActive = true;
+    const activeMode = getActiveEditorMode();
+    if (activeMode === 'maximize') {
+      await deactivateActiveEditorMode();
+      return;
     }
+
+    if (activeMode) {
+      await deactivateActiveEditorMode();
+    }
+
+    const layout = await captureEditorLayout();
+    await vscode.commands.executeCommand('workbench.action.minimizeOtherEditors');
+    await vscode.commands.executeCommand('workbench.action.toggleMaximizeEditorGroup');
+    await vscode.commands.executeCommand('workbench.action.zenShowEditorTab');
+    activateEditorMode('maximize', layout);
   } catch (err) {
     outputChannel.error(`OpenCode terminal maximize failed: ${(err as Error).message}`);
     await vscode.window.showErrorMessage(

@@ -1,4 +1,4 @@
-import { handleToggleMaximizeInstance } from '../../src/commands/toggleMaximizeInstance';
+import { handleToggleZenInstance } from '../../src/commands/toggleZenInstance';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as vscode from 'vscode';
@@ -13,7 +13,7 @@ vi.mock('vscode', () => ({
   },
 }));
 
-describe('handleToggleMaximizeInstance', () => {
+describe('handleToggleZenInstance', () => {
   const outputChannel = {
     error: vi.fn(),
   };
@@ -24,15 +24,17 @@ describe('handleToggleMaximizeInstance', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(vscode.commands.executeCommand).mockResolvedValue(layout);
+    vi.mocked(vscode.commands.executeCommand).mockImplementation(async command =>
+      command === 'vscode.getEditorLayout' ? layout : undefined
+    );
   });
 
-  it('focuses the OpenCode terminal when one is available', async () => {
+  it('expands the active editor group before entering Zen Mode', async () => {
     const connectionService = {
       focusTerminal: vi.fn(async () => true),
     };
 
-    await handleToggleMaximizeInstance(connectionService as never, outputChannel as never);
+    await handleToggleZenInstance(connectionService as never, outputChannel as never);
 
     expect(connectionService.focusTerminal).toHaveBeenCalledOnce();
     expect(vscode.commands.executeCommand).toHaveBeenNthCalledWith(1, 'vscode.getEditorLayout');
@@ -46,16 +48,20 @@ describe('handleToggleMaximizeInstance', () => {
     );
     expect(vscode.commands.executeCommand).toHaveBeenNthCalledWith(
       4,
+      'workbench.action.toggleZenMode'
+    );
+    expect(vscode.commands.executeCommand).toHaveBeenNthCalledWith(
+      5,
       'workbench.action.zenShowEditorTab'
     );
-    expect(vscode.commands.executeCommand).toHaveBeenCalledTimes(4);
+    expect(vscode.commands.executeCommand).toHaveBeenCalledTimes(5);
 
     vi.clearAllMocks();
-    await handleToggleMaximizeInstance(connectionService as never, outputChannel as never);
+    await handleToggleZenInstance(connectionService as never, outputChannel as never);
 
     expect(vscode.commands.executeCommand).toHaveBeenNthCalledWith(
       1,
-      'workbench.action.toggleMaximizeEditorGroup'
+      'workbench.action.toggleZenMode'
     );
     expect(vscode.commands.executeCommand).toHaveBeenNthCalledWith(
       2,
@@ -65,12 +71,29 @@ describe('handleToggleMaximizeInstance', () => {
     expect(vscode.commands.executeCommand).toHaveBeenCalledTimes(2);
   });
 
+  it('does not query unavailable context keys', async () => {
+    vi.mocked(vscode.commands.executeCommand).mockResolvedValue(undefined);
+    const connectionService = {
+      focusTerminal: vi.fn(async () => true),
+    };
+
+    await handleToggleZenInstance(connectionService as never, outputChannel as never);
+
+    expect(vscode.commands.executeCommand).not.toHaveBeenCalledWith(
+      'getContextKeyValue',
+      expect.anything()
+    );
+    expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
+      'workbench.action.minimizeOtherEditors'
+    );
+  });
+
   it('warns when no OpenCode terminal is available', async () => {
     const connectionService = {
       focusTerminal: vi.fn(async () => false),
     };
 
-    await handleToggleMaximizeInstance(connectionService as never, outputChannel as never);
+    await handleToggleZenInstance(connectionService as never, outputChannel as never);
 
     expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(
       'No OpenCode terminal is available.'
@@ -78,20 +101,20 @@ describe('handleToggleMaximizeInstance', () => {
     expect(vscode.commands.executeCommand).not.toHaveBeenCalled();
   });
 
-  it('logs and reports maximize errors', async () => {
+  it('logs and reports Zen Mode errors', async () => {
     const connectionService = {
       focusTerminal: vi.fn(async () => {
         throw new Error('terminal unavailable');
       }),
     };
 
-    await handleToggleMaximizeInstance(connectionService as never, outputChannel as never);
+    await handleToggleZenInstance(connectionService as never, outputChannel as never);
 
     expect(outputChannel.error).toHaveBeenCalledWith(
-      'OpenCode terminal maximize failed: terminal unavailable'
+      'OpenCode terminal Zen Mode failed: terminal unavailable'
     );
     expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
-      'OpenCode terminal maximize failed: terminal unavailable'
+      'OpenCode terminal Zen Mode failed: terminal unavailable'
     );
   });
 });

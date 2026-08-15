@@ -1,3 +1,4 @@
+import { EditorMode, getActiveEditorMode, onDidChangeEditorMode } from './commands/editorMode';
 import { GoUsageResponse, GoUsageWindow } from './types';
 
 import * as vscode from 'vscode';
@@ -27,6 +28,18 @@ function getUsageColor(usage: GoUsageResponse): vscode.ThemeColor {
   return new vscode.ThemeColor('statusBar.foreground');
 }
 
+function getEditorModeIcon(mode: EditorMode | undefined): string {
+  if (mode === 'maximize') {
+    return '$(screen-full)';
+  }
+
+  if (mode === 'zen') {
+    return '$(layout)';
+  }
+
+  return '';
+}
+
 /**
  * Status bar manager for OpenCode connection indicator.
  * Shows connection status in the VSCode status bar.
@@ -38,6 +51,8 @@ export class StatusBarManager {
   private isConnected: boolean = false;
   private connectedPort: number | undefined;
   private goUsage: GoUsageResponse | undefined;
+  private editorMode: EditorMode | undefined;
+  private editorModeListener: (() => void) | undefined;
 
   private constructor() {}
 
@@ -74,6 +89,13 @@ export class StatusBarManager {
     this.goUsageStatusBarItem.command = 'opencodeQol.showGoUsage';
     this.goUsageStatusBarItem.tooltip = 'Click to view OpenCode Go usage';
 
+    this.editorMode = getActiveEditorMode();
+    this.editorModeListener?.();
+    this.editorModeListener = onDidChangeEditorMode(mode => {
+      this.editorMode = mode;
+      this.render();
+    });
+
     // Set initial disconnected state
     this.goUsage = undefined;
     this.updateConnectionStatus(false);
@@ -108,18 +130,29 @@ export class StatusBarManager {
     this.render();
   }
 
+  /**
+   * Update the active OpenCode editor mode indicator.
+   * @param mode - Active mode, or undefined when no mode is active
+   */
+  public updateEditorMode(mode: EditorMode | undefined): void {
+    this.editorMode = mode;
+    this.render();
+  }
+
   private render(): void {
     if (this.statusBarItem) {
+      const modeIcon = getEditorModeIcon(this.editorMode);
+      const modeSuffix = modeIcon ? ` ${modeIcon}` : '';
       if (this.isConnected) {
         const port = this.connectedPort === undefined ? '' : ` :${this.connectedPort}`;
-        this.statusBarItem.text = `$(circle-filled) OpenCode${port}`;
+        this.statusBarItem.text = `$(circle-filled) OpenCode${port}${modeSuffix}`;
         this.statusBarItem.tooltip = 'Click to manage OpenCode connection';
         this.statusBarItem.color = new vscode.ThemeColor('statusBar.foreground');
         this.statusBarItem.backgroundColor = new vscode.ThemeColor(
           'statusBarItem.prominentBackground'
         );
       } else {
-        this.statusBarItem.text = '$(circle-outline) OpenCode';
+        this.statusBarItem.text = `$(circle-outline) OpenCode${modeSuffix}`;
         this.statusBarItem.tooltip = 'Click to manage OpenCode connection';
         this.statusBarItem.color = new vscode.ThemeColor('errorForeground');
         this.statusBarItem.backgroundColor = undefined;
@@ -160,6 +193,8 @@ export class StatusBarManager {
    * Dispose of the status bar item.
    */
   public dispose(): void {
+    this.editorModeListener?.();
+    this.editorModeListener = undefined;
     if (this.statusBarItem) {
       this.statusBarItem.dispose();
       this.statusBarItem = undefined;
@@ -175,6 +210,7 @@ export class StatusBarManager {
    * Reset the singleton instance (useful for testing).
    */
   public static resetInstance(): void {
+    StatusBarManager.instance?.dispose();
     StatusBarManager.instance = undefined as unknown as StatusBarManager;
   }
 }

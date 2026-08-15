@@ -99,6 +99,21 @@ describe('StatusBarManager', () => {
     expect(state.items[1]?.color?.id).toBe('statusBar.foreground');
   });
 
+  it('shows the active editor mode icon next to the connection status', () => {
+    const manager = StatusBarManager.getInstance();
+    manager.initialize({ subscriptions: [] } as never);
+    manager.updateConnectionStatus(true, 4096);
+
+    manager.updateEditorMode('maximize');
+    expect(state.items[0]?.text).toBe('$(circle-filled) OpenCode :4096 $(screen-full)');
+
+    manager.updateEditorMode('zen');
+    expect(state.items[0]?.text).toBe('$(circle-filled) OpenCode :4096 $(layout)');
+
+    manager.updateEditorMode(undefined);
+    expect(state.items[0]?.text).toBe('$(circle-filled) OpenCode :4096');
+  });
+
   it('uses warning and error colors as quota usage rises', () => {
     const manager = StatusBarManager.getInstance();
     manager.initialize({ subscriptions: [] } as never);
